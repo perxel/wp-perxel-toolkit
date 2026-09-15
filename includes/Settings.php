@@ -123,6 +123,33 @@ class Settings {
 					);
 					break;
 
+				case 'users':
+					$logins            = array_map(
+						static function ( $login ) {
+							return sanitize_user( (string) $login, true );
+						},
+						(array) ( $values[ $key ] ?? array() )
+					);
+					$valid_logins      = wp_list_pluck(
+						get_users( array( 'fields' => array( 'user_login' ) ) ),
+						'user_login'
+					);
+					$sanitized[ $key ] = array_values( array_intersect( $logins, $valid_logins ) );
+					break;
+
+				case 'checkbox_group':
+					// Intersecting against the field's own whitelist is the
+					// sanitisation - sanitize_text_field() would mangle a
+					// legitimate option value containing a percent-encoded
+					// octet (e.g. a URL's "%2F"), silently dropping it.
+					$sanitized[ $key ] = array_values(
+						array_intersect(
+							array_map( 'strval', (array) ( $values[ $key ] ?? array() ) ),
+							array_keys( $field['options'] ?? array() )
+						)
+					);
+					break;
+
 				case 'list':
 					$lines             = preg_split( '/[\r\n]+/', (string) ( $values[ $key ] ?? '' ) );
 					$lines             = array_filter( array_map( 'trim', $lines ), 'strlen' );

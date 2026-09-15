@@ -23,6 +23,14 @@ class Admin_Page_Guard extends Module {
 
 	const VIEW_AS_ACTION = 'pxtk_view_as_restricted';
 
+	/** Ported from wp-mu-plugins/admin-page-guard.php's hardcoded list. */
+	const DEFAULT_RESTRICTED_PAGES = array(
+		'/wp-admin/admin.php?page=nectar-blocks'       => 'Nectar Blocks',
+		'/wp-admin/edit.php?post_type=acf-field-group' => 'ACF Field Groups',
+		'/wp-admin/admin.php?page=akeebabackupwp%2Fakeebabackupwp.php' => 'Akeeba Backup',
+		'/wp-admin/plugins.php'                        => 'Plugins',
+	);
+
 	public static function slug(): string {
 		return 'admin-page-guard';
 	}
@@ -47,14 +55,22 @@ class Admin_Page_Guard extends Module {
 		return array(
 			array(
 				'key'     => 'allowed_users',
-				'type'    => 'list',
+				'type'    => 'users',
 				'label'   => __( 'Allowed users', 'perxel-toolkit' ),
-				'default' => array(),
+				'default' => array( 'phucbm' ),
 			),
 			array(
-				'key'     => 'restricted_pages',
+				'key'     => 'default_restricted_pages',
+				'type'    => 'checkbox_group',
+				'label'   => __( 'Default restricted pages', 'perxel-toolkit' ),
+				'options' => self::DEFAULT_RESTRICTED_PAGES,
+				'default' => array_keys( self::DEFAULT_RESTRICTED_PAGES ),
+			),
+			array(
+				'key'     => 'custom_restricted_pages',
 				'type'    => 'list',
-				'label'   => __( 'Restricted pages', 'perxel-toolkit' ),
+				'label'   => __( 'Custom restricted pages', 'perxel-toolkit' ),
+				'desc'    => __( 'wp-admin URLs, as pasted from the address bar - one per line.', 'perxel-toolkit' ),
 				'default' => array(),
 			),
 		);
@@ -66,43 +82,40 @@ class Admin_Page_Guard extends Module {
 		return (array) apply_filters( 'pxtk_admin_page_guard_allowed_users', $stored );
 	}
 
-	/** wp-admin URLs (as pasted from the address bar) to restrict. */
+	/** The wp-admin URLs (as pasted from the address bar) to restrict. */
 	public static function restricted_pages(): array {
-		$stored = Settings::module_settings( self::slug() )['restricted_pages'] ?? array();
+		$settings = Settings::module_settings( self::slug() );
+		$default  = (array) ( $settings['default_restricted_pages'] ?? array_keys( self::DEFAULT_RESTRICTED_PAGES ) );
+		$custom   = (array) ( $settings['custom_restricted_pages'] ?? array() );
+
+		$stored = array_values( array_unique( array_merge( $default, $custom ) ) );
 		return (array) apply_filters( 'pxtk_admin_page_guard_restricted_pages', $stored );
 	}
 
 	/**
-	 * A link that reloads $page_url with a one-off, nonce-protected "view as
-	 * restricted user" flag - used by the "View as" button on the settings
-	 * screen to demonstrate the redirect without switching users. Nothing is
-	 * persisted: the flag only affects the single page load it's present on.
+	 * A link that reloads $page_url with a one-off "view as restricted user"
+	 * flag - used by the "View as" button on the settings screen to
+	 * demonstrate the redirect without switching users. Nothing is
+	 * persisted: the flag only affects the single page load it's present
+	 * on, and is gone the moment that query arg isn't.
 	 *
 	 * @param string $page_url Restricted admin URL to preview.
 	 */
 	public static function view_as_url( string $page_url ): string {
-		return wp_nonce_url(
-			add_query_arg( self::VIEW_AS_ACTION, '1', $page_url ),
-			self::VIEW_AS_ACTION
-		);
+		return add_query_arg( self::VIEW_AS_ACTION, '1', $page_url );
 	}
 
 	/**
 	 * Whether this request is a "View as" preview - gated to users who can
 	 * already manage the guard's settings, so previewing never grants a
-	 * capability, only simulates losing the allowed-user exemption.
+	 * capability, only simulates losing the allowed-user exemption. Public
+	 * so the settings screen can flip its "View as" button to a "Back to
+	 * normal view" link while a preview is active. A read-only display
+	 * toggle, not a state change, so it's a plain query flag - no nonce.
 	 */
-	private static function is_previewing_as_restricted(): bool {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified via wp_verify_nonce() below.
-		if ( empty( $_GET[ self::VIEW_AS_ACTION ] ) || ! current_user_can( 'manage_options' ) ) {
-			return false;
-		}
-
-		return (bool) wp_verify_nonce(
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- this is the verification.
-			isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '',
-			self::VIEW_AS_ACTION
-		);
+	public static function is_previewing_as_restricted(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display toggle for the current request only, no state change; see docblock.
+		return ! empty( $_GET[ self::VIEW_AS_ACTION ] ) && current_user_can( 'manage_options' );
 	}
 
 	public function register(): void {
@@ -133,7 +146,9 @@ class Admin_Page_Guard extends Module {
 			return 'edit.php?post_type=' . $params['post_type'];
 		}
 
-		return null;
+		// A bare top-level page (plugins.php, tools.php, users.php, ...) -
+		// the file itself is the menu slug.
+		return '' !== $file ? $file : null;
 	}
 
 	public function hide_menus(): void {
@@ -171,8 +186,8 @@ class Admin_Page_Guard extends Module {
 
 			$match = true;
 			foreach ( $params as $key => $value ) {
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page match, no state change.
-				if ( ! isset( $_GET[ $key ] ) || wp_unslash( $_GET[ $key ] ) !== $value ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- read-only page match against our own stored config, no state change.
+				if ( ! isset( $_GET[ $key ] ) || sanitize_text_field( wp_unslash( $_GET[ $key ] ) ) !== $value ) {
 					$match = false;
 					break;
 				}

@@ -19,3 +19,11 @@
 .pxtk .pxtk-dependency-notice {
 	color: #b32d2e;
 }
+
+.pxtk .pxtk-checkbox-list label {
+	display: block;
+}
+
+.pxtk .pxtk-checkbox-list label + label {
+	margin-top: 6px;
+}

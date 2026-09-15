@@ -78,8 +78,13 @@ abstract class Module {
 	 *  - 'toggle': a single on/off switch. `default` is bool.
 	 *  - 'roles':  a multi-select of the site's roles (administrator
 	 *              excluded). `default` is a string[] of role slugs.
-	 *  - 'list':   a free-text list, one entry per line (e.g. user logins,
-	 *              URLs). `default` is a string[].
+	 *  - 'users':  a multi-select of the site's users. `default` is a
+	 *              string[] of user logins.
+	 *  - 'checkbox_group': a multi-select of fixed options given inline as
+	 *              `options` (`value => label`), one checkbox per line.
+	 *              `default` is a string[] of option values.
+	 *  - 'list':   a free-text list, one entry per line (e.g. URLs).
+	 *              `default` is a string[].
 	 *
 	 * Rendered either inline as a "Configure" disclosure on the main
 	 * settings screen, or on the module's own settings_page() - see
@@ -138,6 +143,31 @@ abstract class Module {
 					);
 					break;
 
+				case 'users':
+					$control = \Perxel_UI::checkbox_group(
+						array(
+							'name'     => $name,
+							'options'  => self::user_options(),
+							'selected' => (array) $value,
+						)
+					);
+					break;
+
+				case 'checkbox_group':
+					// One checkbox per line rather than the kit's inline
+					// checkbox_group() pills - hand-rolled since the kit has
+					// no stacked layout for this.
+					$selected = array_map( 'strval', (array) $value );
+					$control  = '<div class="pxtk-checkbox-list">';
+					foreach ( (array) ( $field['options'] ?? array() ) as $option_value => $option_label ) {
+						$checked  = in_array( (string) $option_value, $selected, true );
+						$control .= '<label><input type="checkbox" name="' . esc_attr( $name ) . '[]" value="'
+							. esc_attr( $option_value ) . '"' . ( $checked ? ' checked' : '' ) . ' /> '
+							. esc_html( $option_label ) . '</label>';
+					}
+					$control .= '</div>';
+					break;
+
 				case 'list':
 					$control = '<textarea name="' . esc_attr( $name ) . '" rows="4" class="large-text code">'
 						. esc_textarea( implode( "\n", (array) $value ) ) . '</textarea>';
@@ -161,6 +191,22 @@ abstract class Module {
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * All site users as user_login => "Display Name (login)", for a 'users'
+	 * field's checkbox_group.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function user_options(): array {
+		$options = array();
+
+		foreach ( get_users( array( 'fields' => array( 'user_login', 'display_name' ) ) ) as $user ) {
+			$options[ $user->user_login ] = sprintf( '%s (%s)', $user->display_name, $user->user_login );
+		}
+
+		return $options;
 	}
 
 	/**

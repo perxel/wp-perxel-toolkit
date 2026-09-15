@@ -3,6 +3,14 @@
 All notable changes to this plugin are documented here. This file mirrors the
 `== Changelog ==` section of `readme.txt` (keep the two in sync).
 
+## 0.0.3
+
+* Admin Page Guard: "Allowed users" is now a checkbox list of your site's actual users instead of free text.
+* Admin Page Guard: "Restricted pages" is now built-in defaults you can toggle individually, plus a separate free-text list for custom URLs.
+* Admin Page Guard: a "View as not-allowed user" button next to Save changes previews the effect without switching accounts - a stateless URL flag, nothing persisted.
+* Fix: Admin Page Guard's menu-hiding didn't recognise bare top-level pages such as Plugins.
+* Fix: saving a checkbox-list field could silently drop an option whose value contained a percent-encoded character (e.g. Akeeba Backup's default restricted page).
+
 ## 0.0.2
 
 * Add a Recommended Plugins section to the settings screen - Perxel's curated per-project plugin list, with a one-click install for anything on wordpress.org.

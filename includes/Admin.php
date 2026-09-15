@@ -22,9 +22,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Admin {
 
-	const PAGE_SETTINGS = 'pxtk';
-	const PAGE_ADMIN_PAGE_GUARD = 'pxtk-admin-page-guard';
-	const PAGE_UI = 'pxtk-ui';
+	const PAGE_SETTINGS            = 'pxtk';
+	const PAGE_ADMIN_PAGE_GUARD    = 'pxtk-admin-page-guard';
+	const PAGE_RECOMMENDED_PLUGINS = 'pxtk-recommended-plugins';
+	const PAGE_UI                  = 'pxtk-ui';
 
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
@@ -51,17 +52,33 @@ class Admin {
 			array( $this, 'render_settings' )
 		);
 
-		add_management_page(
+		// Reachable only through the kit's in-page sidebar nav (added to
+		// $titles/layout_args() below), not as its own item in WP's Tools
+		// menu - same off-menu pattern as the UI-kit showcase.
+		add_submenu_page(
+			null,
 			Admin_Page_Guard::label(),
-			Admin_Page_Guard::label(),
+			'',
 			'manage_options',
 			self::PAGE_ADMIN_PAGE_GUARD,
 			array( $this, 'render_admin_page_guard' )
 		);
 
+		// Same off-menu pattern - reachable only through the kit's in-page
+		// sidebar nav, not as its own item in WP's Tools menu.
+		add_submenu_page(
+			null,
+			__( 'Recommended Plugins', 'perxel-toolkit' ),
+			'',
+			'manage_options',
+			self::PAGE_RECOMMENDED_PLUGINS,
+			array( $this, 'render_recommended_plugins' )
+		);
+
 		$titles = array(
-			self::PAGE_SETTINGS         => __( 'Settings', 'perxel-toolkit' ),
-			self::PAGE_ADMIN_PAGE_GUARD => Admin_Page_Guard::label(),
+			self::PAGE_SETTINGS            => __( 'Settings', 'perxel-toolkit' ),
+			self::PAGE_ADMIN_PAGE_GUARD    => Admin_Page_Guard::label(),
+			self::PAGE_RECOMMENDED_PLUGINS => __( 'Recommended Plugins', 'perxel-toolkit' ),
 		);
 
 		// The bundled UI-kit showcase - a hidden, maintainer-only screen, and
@@ -117,7 +134,7 @@ class Admin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen switch.
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
-		$pages = array( self::PAGE_SETTINGS, self::PAGE_ADMIN_PAGE_GUARD, self::PAGE_UI );
+		$pages = array( self::PAGE_SETTINGS, self::PAGE_ADMIN_PAGE_GUARD, self::PAGE_RECOMMENDED_PLUGINS, self::PAGE_UI );
 
 		if ( ! in_array( $page, $pages, true ) ) {
 			return;
@@ -169,8 +186,9 @@ class Admin {
 		$header = $this->plugin_header();
 
 		$pages = array(
-			self::PAGE_SETTINGS         => __( 'Settings', 'perxel-toolkit' ),
-			self::PAGE_ADMIN_PAGE_GUARD => Admin_Page_Guard::label(),
+			self::PAGE_SETTINGS            => __( 'Settings', 'perxel-toolkit' ),
+			self::PAGE_ADMIN_PAGE_GUARD    => Admin_Page_Guard::label(),
+			self::PAGE_RECOMMENDED_PLUGINS => __( 'Recommended Plugins', 'perxel-toolkit' ),
 		);
 
 		if ( self::can_see_showcase() ) {
@@ -280,12 +298,30 @@ class Admin {
 			array( 'form' => 'pxtk-admin-page-guard-form' )
 		);
 
+		$page_url = menu_page_url( self::PAGE_ADMIN_PAGE_GUARD, false );
+
+		if ( Admin_Page_Guard::is_previewing_as_restricted() ) {
+			$view_as = '<a href="' . esc_url( $page_url ) . '" class="button">'
+				. esc_html__( 'Back to normal view', 'perxel-toolkit' ) . '</a>';
+		} else {
+			$view_as = '<a href="' . esc_url( Admin_Page_Guard::view_as_url( $page_url ) ) . '" class="button">'
+				. esc_html__( 'View as not-allowed user', 'perxel-toolkit' ) . '</a>';
+		}
+
 		$this->screen(
 			self::PAGE_ADMIN_PAGE_GUARD,
 			Admin_Page_Guard::label(),
 			'admin-page-guard',
 			$vars,
-			array( 'actions' => $save )
+			array( 'actions' => $view_as . $save )
+		);
+	}
+
+	public function render_recommended_plugins() {
+		$this->screen(
+			self::PAGE_RECOMMENDED_PLUGINS,
+			__( 'Recommended Plugins', 'perxel-toolkit' ),
+			'recommended-plugins'
 		);
 	}
 
@@ -336,6 +372,7 @@ class Admin {
 		$slug   = Admin_Page_Guard::slug();
 		$values = isset( $raw['module_settings'][ $slug ] ) && is_array( $raw['module_settings'][ $slug ] ) ? $raw['module_settings'][ $slug ] : array();
 
+		Settings::set_module_enabled( $slug, ! empty( $raw['modules'][ $slug ] ) );
 		Settings::update_module_settings( $slug, Settings::sanitize_module_fields( Admin_Page_Guard::class, $values ) );
 
 		wp_safe_redirect(

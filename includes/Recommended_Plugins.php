@@ -2,24 +2,35 @@
 
 namespace Perxel_Toolkit;
 
+use Perxel_Toolkit\Modules\Acf;
+use Perxel_Toolkit\Modules\Gravity_Forms;
+use Perxel_Toolkit\Modules\Nectarblocks;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
  * Static curated list of plugins Perxel recommends installing on every
- * project, shown on the settings screen with a direct install link.
- * Sourced from https://perxel.com/insights/wordpress-plugin-list.
+ * project, shown on their own "Recommended Plugins" settings screen with a
+ * direct install link. Sourced from
+ * https://perxel.com/insights/wordpress-plugin-list.
  *
  * Each entry has a `label`, a `description`, and either `wporg_slug` (renders
  * a real one-click "Install Now" link, same as an integration module's
  * dependency()) or `install_url` (a plain link - use this when the plugin
  * isn't on wordpress.org, e.g. a premium plugin sold from its own site).
+ *
+ * An entry for a plugin this toolkit also has a dedicated Integration module
+ * for (NectarBlocks, Gravity Forms, Secure Custom Fields) reuses that
+ * module's own `dependency()['check']` (via `check`) so "already installed"
+ * is the same real detection the Integrations section on the main Settings
+ * screen uses, instead of a second, easily-stale guess.
  */
 class Recommended_Plugins {
 
 	/**
-	 * @return array<int,array{group:string,label:string,description:string,wporg_slug?:string,install_url?:string}>
+	 * @return array<int,array{group:string,label:string,description:string,wporg_slug?:string,install_url?:string,check?:callable}>
 	 */
 	public static function all(): array {
 		return array(
@@ -27,13 +38,16 @@ class Recommended_Plugins {
 				'group'       => __( 'Core', 'perxel-toolkit' ),
 				'label'       => __( 'NectarBlocks', 'perxel-toolkit' ),
 				'description' => __( 'Page builder for Gutenberg with visual layout, responsive, hover and animation controls.', 'perxel-toolkit' ),
+				'wporg_slug'  => 'nectar-blocks',
 				'install_url' => 'https://nectarblocks.com/',
+				'check'       => array( Nectarblocks::class, 'is_available' ),
 			),
 			array(
 				'group'       => __( 'Core', 'perxel-toolkit' ),
 				'label'       => __( 'Gravity Forms', 'perxel-toolkit' ),
 				'description' => __( 'Contact, survey and registration forms with complex conditional logic.', 'perxel-toolkit' ),
 				'install_url' => 'https://www.gravityforms.com/',
+				'check'       => array( Gravity_Forms::class, 'is_available' ),
 			),
 			array(
 				'group'       => __( 'Core', 'perxel-toolkit' ),
@@ -52,6 +66,7 @@ class Recommended_Plugins {
 				'label'       => __( 'Secure Custom Fields', 'perxel-toolkit' ),
 				'description' => __( 'Custom fields for the admin editor - the official free successor to Advanced Custom Fields.', 'perxel-toolkit' ),
 				'wporg_slug'  => 'secure-custom-fields',
+				'check'       => array( Acf::class, 'is_available' ),
 			),
 			array(
 				'group'       => __( 'Core', 'perxel-toolkit' ),
@@ -120,6 +135,40 @@ class Recommended_Plugins {
 				'wporg_slug'  => 'wp-mail-smtp',
 			),
 		);
+	}
+
+	/**
+	 * Whether an entry's plugin is already installed (and active) on this
+	 * site - an explicit `check` (used for entries this toolkit also has an
+	 * Integration module for) takes priority; otherwise, for a `wporg_slug`
+	 * entry, fall back to a generic active-plugin lookup by slug so a stale
+	 * "Install Now" / "Get X" action never shows for something already
+	 * running. An `install_url`-only entry with no `check` (e.g. WPML,
+	 * Akeeba Backup - no wordpress.org slug to key off) can't be detected
+	 * this way and always shows its install action.
+	 *
+	 * @param array{wporg_slug?:string,check?:callable} $plugin One entry from all().
+	 */
+	public static function is_installed( array $plugin ): bool {
+		if ( ! empty( $plugin['check'] ) && is_callable( $plugin['check'] ) ) {
+			return (bool) call_user_func( $plugin['check'] );
+		}
+
+		if ( empty( $plugin['wporg_slug'] ) ) {
+			return false;
+		}
+
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		foreach ( array_keys( get_plugins() ) as $plugin_file ) {
+			if ( 0 === strpos( $plugin_file, $plugin['wporg_slug'] . '/' ) && is_plugin_active( $plugin_file ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
