@@ -26,9 +26,24 @@ class Settings {
 		return $defaults;
 	}
 
+	/**
+	 * @return array<string,array<string,mixed>> Module slug => its
+	 *         settings_fields() defaults, for modules that declare any.
+	 */
+	public static function default_module_settings(): array {
+		$defaults = array();
+		foreach ( Registry::all() as $module ) {
+			if ( $module::settings_fields() ) {
+				$defaults[ $module::slug() ] = $module::default_settings();
+			}
+		}
+		return $defaults;
+	}
+
 	public static function defaults(): array {
 		return array(
-			'modules' => self::default_modules(),
+			'modules'         => self::default_modules(),
+			'module_settings' => self::default_module_settings(),
 		);
 	}
 
@@ -44,7 +59,27 @@ class Settings {
 			self::default_modules()
 		);
 
+		$saved_module_settings = isset( $saved['module_settings'] ) && is_array( $saved['module_settings'] ) ? $saved['module_settings'] : array();
+
+		$module_settings = array();
+		foreach ( self::default_module_settings() as $slug => $field_defaults ) {
+			$module_settings[ $slug ] = wp_parse_args(
+				isset( $saved_module_settings[ $slug ] ) && is_array( $saved_module_settings[ $slug ] ) ? $saved_module_settings[ $slug ] : array(),
+				$field_defaults
+			);
+		}
+		$saved['module_settings'] = $module_settings;
+
 		return $saved;
+	}
+
+	/**
+	 * @return array<string,mixed> One module's settings_fields() values,
+	 *         merged over its defaults. Empty for a module with no fields.
+	 */
+	public static function module_settings( string $slug ): array {
+		$all = self::all();
+		return $all['module_settings'][ $slug ] ?? array();
 	}
 
 	/**
@@ -87,18 +122,56 @@ class Settings {
 		$submitted = isset( $raw['modules'] ) && is_array( $raw['modules'] ) ? $raw['modules'] : array();
 		$current   = self::get( 'modules' );
 
-		$modules = array();
+		$submitted_settings = isset( $raw['module_settings'] ) && is_array( $raw['module_settings'] ) ? $raw['module_settings'] : array();
+		$current_settings   = self::get( 'module_settings' );
+
+		$modules         = array();
+		$module_settings = array();
+
 		foreach ( Registry::all() as $module ) {
 			$slug = $module::slug();
 
 			if ( ! $module::is_available() ) {
 				$modules[ $slug ] = ! empty( $current[ $slug ] );
+				if ( $module::settings_fields() ) {
+					$module_settings[ $slug ] = $current_settings[ $slug ] ?? $module::default_settings();
+				}
 				continue;
 			}
 
 			$modules[ $slug ] = ! empty( $submitted[ $slug ] );
+
+			$fields = $module::settings_fields();
+			if ( ! $fields ) {
+				continue;
+			}
+
+			$values    = isset( $submitted_settings[ $slug ] ) && is_array( $submitted_settings[ $slug ] ) ? $submitted_settings[ $slug ] : array();
+			$sanitized = array();
+
+			foreach ( $fields as $field ) {
+				$key = $field['key'];
+
+				if ( 'roles' === $field['type'] ) {
+					$roles                = array_keys( wp_roles()->roles );
+					$sanitized[ $key ]    = array_values(
+						array_intersect(
+							array_map( 'sanitize_key', (array) ( $values[ $key ] ?? array() ) ),
+							$roles
+						)
+					);
+					continue;
+				}
+
+				$sanitized[ $key ] = ! empty( $values[ $key ] );
+			}
+
+			$module_settings[ $slug ] = $sanitized;
 		}
 
-		return array( 'modules' => $modules );
+		return array(
+			'modules'         => $modules,
+			'module_settings' => $module_settings,
+		);
 	}
 }

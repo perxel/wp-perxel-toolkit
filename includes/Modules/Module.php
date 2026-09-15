@@ -22,7 +22,11 @@ abstract class Module {
 
 	abstract public static function description(): string;
 
-	/** 'feature' or 'integration'. */
+	/**
+	 * 'feature', 'integration', or another group slug (e.g. 'security').
+	 * The settings screen only renders a section for a group that has at
+	 * least one module in it - see includes/views/settings.php.
+	 */
 	abstract public static function group(): string;
 
 	/**
@@ -32,6 +36,15 @@ abstract class Module {
 	 * @return array{label:string,check:callable,wporg_slug?:string,install_url?:string}|null
 	 */
 	public static function dependency() {
+		return null;
+	}
+
+	/**
+	 * Admin::PAGE_* slug for a module with its own dedicated settings screen,
+	 * linked from its row on the main settings screen as a "Configure"
+	 * button. Null (default) means the toggle is the module's only control.
+	 */
+	public static function settings_page(): ?string {
 		return null;
 	}
 
@@ -46,6 +59,36 @@ abstract class Module {
 		}
 
 		return (bool) call_user_func( $dependency['check'] );
+	}
+
+	/**
+	 * Per-module settings fields, rendered on the settings screen as a
+	 * "Configure" disclosure under the module's row. Empty array (the
+	 * default) means the module has no configurable fields beyond its
+	 * on/off toggle.
+	 *
+	 * Each field is `[ 'key', 'type', 'label', 'default' ]`. `key` must be
+	 * unique within the module and stable (stored under it, never rename in
+	 * place). `type` is one of:
+	 *  - 'toggle': a single on/off switch. `default` is bool.
+	 *  - 'roles':  a multi-select of the site's roles (administrator
+	 *              excluded). `default` is a string[] of role slugs.
+	 *
+	 * @return array<int,array{key:string,type:string,label:string,default:mixed}>
+	 */
+	public static function settings_fields(): array {
+		return array();
+	}
+
+	/**
+	 * @return array<string,mixed> Field key => default value.
+	 */
+	public static function default_settings(): array {
+		$defaults = array();
+		foreach ( static::settings_fields() as $field ) {
+			$defaults[ $field['key'] ] = $field['default'] ?? null;
+		}
+		return $defaults;
 	}
 
 	/**
