@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<ruleset name="Perxel Example">
+	<description>Coding standards for the Perxel Example plugin.</description>
+
+	<file>.</file>
+
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/dist/*</exclude-pattern>
+	<exclude-pattern>/languages/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<!--
+		6.5 minimum. Note: 6.2 is the hard floor for the %i placeholder in
+		$wpdb->prepare() (see CLAUDE.md -> "Custom tables") - never drop below it.
+	-->
+	<config name="minimum_supported_wp_version" value="6.5"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress">
+		<!--
+			House style, deliberately different from the WP-Docs defaults that
+			wpcs 3.x folded into the base standard:
+
+			- One PSR-4-ish class per file (Ucfirst.php), loaded by the
+			  hand-rolled autoloader in the main file - not `class-ucfirst.php`.
+			- Classes live in a namespace behind an ABSPATH guard; a redundant
+			  file-level `@package` docblock is noise.
+			- Terse helpers and one-line accessors carry a `@param`/`@return`
+			  block or no docblock at all, never a mandatory prose summary.
+			- Inline comment terminal punctuation is not enforced.
+			- WP filter/action callbacks keep the full hook signature even when a
+			  later parameter is unused.
+			- The "commented-out code" heuristic fires on ordinary prose here.
+		-->
+		<exclude name="WordPress.Files.FileName"/>
+		<exclude name="Squiz.Commenting.FileComment"/>
+		<exclude name="Squiz.Commenting.FunctionComment.Missing"/>
+		<exclude name="Squiz.Commenting.FunctionComment.MissingParamTag"/>
+		<exclude name="Squiz.Commenting.FunctionComment.WrongStyle"/>
+		<exclude name="Squiz.Commenting.BlockComment.CloserSameLine"/>
+		<exclude name="Generic.Commenting.DocComment.MissingShort"/>
+		<exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
+		<exclude name="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+		<exclude name="Squiz.PHP.CommentedOutCode"/>
+	</rule>
+
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="pxex"/>
+				<element value="PXEX"/>
+				<!-- Namespace root = slug in Ucfirst_Snake form, so Plugin Check
+				     (which does not read this file) accepts it too. -->
+				<element value="Perxel_Example"/>
+				<!-- Shared admin-UI kit (vendor/perxel-ui/), versioned independently. -->
+				<element value="perxel_ui"/>
+				<element value="PERXEL_UI"/>
+				<element value="Perxel_UI"/>
+				<element value="pxui"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		Custom tables: uncomment when the plugin adds includes/Db.php + a
+		repository class. Queries bind the table name with %i and every value
+		through a placeholder, so the prepared-SQL sniffs pass unaided; only
+		these stay excluded (a live table read is uncached; Db.php issues DDL).
+		Plugin Check ignores this file, so annotate the calls inline too, e.g.
+		phpcs:ignore of WordPress.DB.DirectDatabaseQuery.DirectQuery + NoCaching
+		with a reason.
+	-->
+	<!--
+	<rule ref="WordPress.DB.DirectDatabaseQuery">
+		<exclude-pattern>/includes/Db.php</exclude-pattern>
+		<exclude-pattern>/uninstall.php</exclude-pattern>
+	</rule>
+	-->
+
+	<!--
+		Third-party plugin hooks (WPML wpml_*, WooCommerce, ...): if the plugin
+		wraps another plugin's hooks, scope this to the wrapper file and mirror
+		the code into the lint.yml ignore-codes block (Plugin Check does not read
+		this file).
+	-->
+	<!--
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound">
+		<exclude-pattern>/includes/Wpml.php</exclude-pattern>
+	</rule>
+	-->
+
+	<!--
+		Plugin Check also flags set_time_limit() and similar in a long-running
+		request. Guard the call with function_exists() and add an inline
+		phpcs:ignore of Squiz.PHP.DiscouragedFunctions.Discouraged with a reason
+		at the call site (and, if wanted, to the lint.yml ignore-codes block).
+	-->
+
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="perxel-example"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		Procedural scripts and view templates: top-level / include-scope
+		variables read by a static analyser as globals, but they are not.
+	-->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
+		<exclude-pattern>/includes/views/*</exclude-pattern>
+		<exclude-pattern>/uninstall.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.GlobalVariablesOverride.Prohibited">
+		<exclude-pattern>/includes/views/*</exclude-pattern>
+		<exclude-pattern>/uninstall.php</exclude-pattern>
+	</rule>
+</ruleset>

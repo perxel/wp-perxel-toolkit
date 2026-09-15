@@ -1,0 +1,30 @@
+# Files and folders that must NOT ship in the WordPress.org / installable build.
+# vendor/ is git-ignored except vendor/perxel-ui/ (the shared admin-UI kit), so
+# only that one dependency is present here to begin with; its dev-only showcase
+# is stripped below.
+
+/.git
+/.github
+/.claude
+/.idea
+/.wordpress-org
+/assets-src
+/bin
+/dist
+/node_modules
+/tests
+
+/vendor/perxel-ui/showcase
+
+.distignore
+.gitignore
+.editorconfig
+AGENTS.md
+CLAUDE.md
+README.md
+composer.json
+composer.lock
+phpcs.xml.dist
+phpunit.xml.dist
+package.json
+package-lock.json
