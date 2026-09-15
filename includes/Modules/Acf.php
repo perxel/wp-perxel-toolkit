@@ -125,11 +125,12 @@ class Acf extends Module {
 	 * @return string
 	 */
 	public function save_json_path( $path ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- ACF handles the field-group save nonce; only reading location rules here.
 		if ( ! isset( $_POST['acf_field_group'] ) ) {
 			return $path;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- ACF handles the field-group save nonce; only reading location rules here.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ACF handles the field-group save nonce; this is ACF's own field-group array, only used to pick a filesystem save path (block_slug(), shared_filename()) that's then checked with is_dir()/sanitize_title() before use.
 		$field_group = wp_unslash( $_POST['acf_field_group'] );
 
 		foreach ( ( $field_group['location'] ?? array() ) as $group ) {
@@ -197,10 +198,12 @@ class Acf extends Module {
 
 	public function admin_notice(): void {
 		$screen = get_current_screen();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only: which field group's edit screen this is, no state change.
 		if ( ! $screen || 'acf-field-group' !== $screen->id || ! isset( $_GET['post'] ) ) {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only, and absint() sanitises the value.
 		$field_group = acf_get_field_group( absint( $_GET['post'] ) );
 		if ( ! $field_group ) {
 			return;

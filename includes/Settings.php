@@ -88,11 +88,11 @@ class Settings {
 	 * settings page (see Module::settings_page()); the main settings form
 	 * saves every module's fields at once via sanitize() instead.
 	 *
-	 * @param string               $slug   Module slug.
-	 * @param array<string,mixed>  $values Already-sanitised field values.
+	 * @param string              $slug   Module slug.
+	 * @param array<string,mixed> $values Already-sanitised field values.
 	 */
 	public static function update_module_settings( string $slug, array $values ): void {
-		$module_settings = self::get( 'module_settings' );
+		$module_settings          = self::get( 'module_settings' );
 		$module_settings[ $slug ] = $values;
 		self::update( array( 'module_settings' => $module_settings ) );
 	}
@@ -102,8 +102,8 @@ class Settings {
 	 * field type. Shared by the main settings form (sanitize(), all modules
 	 * at once) and a module's own dedicated settings page (one module).
 	 *
-	 * @param class-string<\Perxel_Toolkit\Modules\Module> $module Module class.
-	 * @param array                                         $values Raw field values (already unslashed), keyed by field key.
+	 * @param string $module Fully-qualified class name of a Modules\Module subclass.
+	 * @param array  $values Raw field values (already unslashed), keyed by field key.
 	 * @return array<string,mixed>
 	 */
 	public static function sanitize_module_fields( string $module, array $values ): array {
