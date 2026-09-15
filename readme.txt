@@ -4,7 +4,7 @@ Tags: tag-one, tag-two
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.0.3
+Stable tag: 0.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,8 @@ them across client sites is a plugin update instead of a file diff.
 * Admin Page Guard - restrict selected admin pages to allowed users
 * Featured Image Column - featured-image column with quick-edit on the post list
 * Featured Posts - a featured checkbox on posts with native query support
+* Disable Comments - turn off commenting site-wide and hide the related admin UI
+* Media Sizes - a larger default image-size ladder, with every other size (core's extras, plugins', theme's) removed
 * Gravity Forms integration - run multiple instances of the same form per page
 * ACF/SCF integration - route field-group JSON to per-block/per-location paths
 * Nectar Blocks integration - hide default core blocks when Nectar Blocks is active
@@ -60,6 +62,10 @@ posts or media library is left untouched.
 1. The Settings screen.
 
 == Changelog ==
+
+= 0.0.4 =
+* Add Disable Comments - turns off commenting site-wide (closed, hidden, not deleted) and strips the related admin UI (menu, dashboard widget, admin bar, list-table column, widget).
+* Add Media Sizes - replaces WordPress's small default image sizes with a larger ladder and removes every other registered size (core's extras, plugins', the theme's), with filters for per-project overrides.
 
 = 0.0.3 =
 * Admin Page Guard: "Allowed users" is now a checkbox list of your site's actual users instead of free text.

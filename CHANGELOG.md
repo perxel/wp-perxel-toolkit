@@ -3,6 +3,11 @@
 All notable changes to this plugin are documented here. This file mirrors the
 `== Changelog ==` section of `readme.txt` (keep the two in sync).
 
+## 0.0.4
+
+* Add Disable Comments - turns off commenting site-wide (closed, hidden, not deleted) and strips the related admin UI (menu, dashboard widget, admin bar, list-table column, widget).
+* Add Media Sizes - replaces WordPress's small default image sizes with a larger ladder and removes every other registered size (core's extras, plugins', the theme's), with filters for per-project overrides.
+
 ## 0.0.3
 
 * Admin Page Guard: "Allowed users" is now a checkbox list of your site's actual users instead of free text.

@@ -20,6 +20,8 @@ class Registry {
 		Admin_Page_Guard::class,
 		Featured_Image_Column::class,
 		Featured_Posts::class,
+		Disable_Comments::class,
+		Media_Sizes::class,
 		Gravity_Forms::class,
 		Acf::class,
 		Nectarblocks::class,
