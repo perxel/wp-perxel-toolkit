@@ -11,8 +11,9 @@ Activate it and go to **Tools -> Perxel Toolkit**. Two groups of toggles:
   Page Guard, Featured Image Column, Featured Posts.
 - **Integrations** - config for a specific third-party plugin or theme
   convention. Greyed out with an install link/message until that dependency
-  is detected on the site: Gravity Forms, ACF/SCF, Nectarblocks (hides
-  default core blocks on a theme built with a `blocks.json`).
+  is detected on the site: Gravity Forms, ACF/SCF, Nectar Blocks (when the
+  Nectar Blocks plugin is active, hides default core blocks so the inserter
+  only offers Nectar Blocks + the project's own custom blocks).
 
 Every module is currently a single on/off toggle; per-module settings
 (which post types, which pages, etc.) are exposed as filters for now (see

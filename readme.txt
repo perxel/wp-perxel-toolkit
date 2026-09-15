@@ -14,8 +14,8 @@ Toggleable admin/editor features and third-party plugin integrations shared acro
 
 Perxel Toolkit bundles the small admin/editor features and plugin
 integrations we re-add on every project (editor restrictions, admin page
-guarding, featured images/posts, Gravity Forms and ACF/SCF tweaks, Nectarblocks
-block visibility) into one plugin with a single settings screen, so updating
+guarding, featured images/posts, Gravity Forms and ACF/SCF tweaks, Nectar
+Blocks visibility) into one plugin with a single settings screen, so updating
 them across client sites is a plugin update instead of a file diff.
 
 **Key features**
@@ -26,7 +26,7 @@ them across client sites is a plugin update instead of a file diff.
 * Featured Posts - a featured checkbox on posts with native query support
 * Gravity Forms integration - run multiple instances of the same form per page
 * ACF/SCF integration - route field-group JSON to per-block/per-location paths
-* Nectarblocks integration - hide default core blocks, keep only project blocks
+* Nectar Blocks integration - hide default core blocks when Nectar Blocks is active
 
 == External services ==
 
