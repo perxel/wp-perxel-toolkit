@@ -4,21 +4,23 @@ Guidance for working on this repository.
 
 ## What this is
 
-`perxel-example` - a **public** WordPress plugin (repo
-`github.com/perxel/wp-example`, WordPress.org slug `perxel-example`,
+`perxel-toolkit` - a **public** WordPress plugin (repo
+`github.com/perxel/wp-perxel-toolkit`, WordPress.org slug `perxel-toolkit`,
 published under the `phucbm` .org account, branded Perxel).
 
 It was scaffolded from
-[`perxel/wp-plugin-starter`](https://github.com/perxel/wp-plugin-starter). If
-this file still says "perxel-example" / "PXEX" / "Example", the
-template tokens have not been replaced yet - see the starter README.
+[`perxel/wp-plugin-starter`](https://github.com/perxel/wp-plugin-starter) and
+extended with a module system (see "Modules" below) - the toolkit bundles
+several small admin/editor features and plugin integrations behind one
+settings screen instead of shipping them as separate mu-plugins per client.
 
 ## Layout
 
 ```
-perxel-example.php      Main file: header, constants, autoloader, UI-kit loader, boot
+perxel-toolkit.php      Main file: header, constants, autoloader, UI-kit loader, boot
 uninstall.php               Deletes the option (and any custom tables) on delete
-includes/*.php              One PSR-4-ish class per concern, namespace Perxel_Example\
+includes/*.php              One PSR-4-ish class per concern, namespace Perxel_Toolkit\
+includes/Modules/*.php      One class per module (Module, Registry, and each feature/integration)
 includes/views/*.php        Dumb admin templates, fed vars by the screen classes
 assets/css, assets/js       Admin-only CSS/JS (plugin-specific; layout comes from the kit)
 vendor/perxel-ui/           Shared admin-UI kit - vendored, see below
@@ -40,16 +42,50 @@ Composer). `Plugin::instance()->boot()` runs on `plugins_loaded` and wires
   asset loading, and the plain-form / `admin-post` handlers. Each screen is a
   `render_*()` method + a view under `includes/views/`; heavier per-screen logic
   goes in its own class.
-- **`Settings`** - the one option (`PXEX_OPTION_KEY`), read through typed
+- **`Settings`** - the one option (`PXTK_OPTION_KEY`), read through typed
   accessors, written through `update()` / `sanitize()`. Never call
   `get_option()` for it directly elsewhere.
+
+## Modules
+
+Everything the toolkit actually *does* lives under `includes/Modules/` as a
+class extending `Modules\Module`, listed in `Modules\Registry::MODULES`.
+`Registry::boot()` (called from `Plugin::boot()`) instantiates and calls
+`register()` on every module that is both enabled in `Settings` and
+`is_available()`.
+
+- **Feature module** (`group()` returns `'feature'`) - self-contained, no
+  third-party dependency, always available. E.g. `Editor_Restrictions`,
+  `Admin_Page_Guard`, `Featured_Image_Column`, `Featured_Posts`.
+- **Integration module** (`group()` returns `'integration'`) - config for a
+  specific third-party plugin or theme convention. Overrides `dependency()`
+  with a `label`, a `check` callable, and either `wporg_slug` (renders a
+  real one-click "Install Now" button on the settings screen) or
+  `install_url` (a plain link - use this when the dependency isn't on
+  wordpress.org, e.g. Gravity Forms). `is_available()` calls `check()`; when
+  false the settings screen greys the row out and shows the install
+  action instead of letting the toggle be flipped. E.g. `Gravity_Forms`,
+  `Acf`, `Nectarblocks`.
+
+Every module is currently toggle-only - no per-module settings UI yet.
+Where the ported mu-plugin had its own per-client config (allowed users,
+restricted pages, which post types), that config is exposed as a WordPress
+filter for now (documented in each class's docblock) rather than a second
+settings screen; add real fields to `includes/views/settings.php` when a
+module needs deeper configuration.
+
+`Settings::sanitize()` skips reading a module's checkbox from `$_POST` when
+`is_available()` is false - a disabled `<input>` is never submitted by the
+browser, so treating a missing field as "off" would silently disable a
+module the moment its dependency goes away. The stored value is preserved
+instead.
 
 ### Custom tables
 
 The template ships none. When you add them:
 
 - One `includes/Db.php` for schema (`dbDelta` on `Plugin::activate()`, a stored
-  `pxex_db_version` option, `Db::maybe_upgrade()` on `init`), and one repository
+  `pxtk_db_version` option, `Db::maybe_upgrade()` on `init`), and one repository
   class that is the *only* code touching the tables.
 - **Bind the table name with the `%i` placeholder - never concatenate it.**
   `%i` needs WP 6.2+ (the template's floor is already 6.5).
@@ -80,14 +116,14 @@ The template ships none. When you add them:
 
 ## Conventions
 
-- **Namespace** `Perxel_Example\` - the slug (`perxel-example`) in
+- **Namespace** `Perxel_Toolkit\` - the slug (`perxel-toolkit`) in
   `Ucfirst_Snake` form, so `WordPress.NamingConventions.PrefixAllGlobals`
   accepts it as the plugin prefix (Plugin Check does not read `phpcs.xml.dist`,
   so a `Vendor\Package`-style namespace would be flagged there). Sub-namespaces
-  are fine (`Perxel_Example\Admin\Foo` -> `includes/Admin/Foo.php`). Hooks,
-  option keys and CSS classes stay `pxex_` / `pxex-`; constants `PXEX_`. Product
-  name is the constant `PXEX_NAME` (no rebrand option).
-- **Text domain** `perxel-example` (= the slug). JS i18n via `wp.i18n`
+  are fine (`Perxel_Toolkit\Admin\Foo` -> `includes/Admin/Foo.php`). Hooks,
+  option keys and CSS classes stay `pxtk_` / `pxtk-`; constants `PXTK_`. Product
+  name is the constant `PXTK_NAME` (no rebrand option).
+- **Text domain** `perxel-toolkit` (= the slug). JS i18n via `wp.i18n`
   (`wp_set_script_translations`); script deps include `wp-i18n`.
 - **Escape at output.** Views set
   `// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped` because the
@@ -146,10 +182,10 @@ Rules that are not obvious and cost real time when re-derived per plugin:
 
 | Rule | Why |
 |---|---|
-| Namespace root = slug in `Ucfirst_Snake` (`Perxel_Example`) | `PrefixAllGlobals` accepts it as the prefix; a `Vendor\Package` namespace is flagged (`NonPrefixedNamespaceFound`) and Plugin Check ignores the `phpcs.xml.dist` prefix list |
+| Namespace root = slug in `Ucfirst_Snake` (`Perxel_Toolkit`) | `PrefixAllGlobals` accepts it as the prefix; a `Vendor\Package` namespace is flagged (`NonPrefixedNamespaceFound`) and Plugin Check ignores the `phpcs.xml.dist` prefix list |
 | Custom-table names via `%i`, never string-concatenated | `WordPress.DB.PreparedSQL.NotPrepared` is **error-level** and blocks .org (see "Custom tables") |
 | No `load_plugin_textdomain()` | .org auto-loads translations (slug == text domain); calling it on `plugins_loaded` is "too early" on WP 6.7+ |
-| Prefix any variable you **assign** in a view (`$pxex_url`); vars passed in via `extract()` are fine | `NonPrefixedVariableFound` fires on template-scope assignments |
+| Prefix any variable you **assign** in a view (`$pxtk_url`); vars passed in via `extract()` are fine | `NonPrefixedVariableFound` fires on template-scope assignments |
 | `set_time_limit()` etc.: `function_exists()` guard + inline `// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- <reason>` | discouraged-function warning |
 | Calling another plugin's hooks (WPML `wpml_*`, WooCommerce): scope a `phpcs.xml.dist` exclude to the wrapper file **and** add the code to `lint.yml` -> `ignore-codes` | `NonPrefixedHooknameFound`; the two tools don't share config |
 | `'suppress_filters' => true` in a query: same dual-suppression, code `WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters` | deliberate but flagged |
@@ -161,12 +197,12 @@ Any suppression for a documented false positive goes in *both* places -
 
 ## Releasing
 
-1. Bump the version in `perxel-example.php` (header + `PXEX_VERSION`) and
+1. Bump the version in `perxel-toolkit.php` (header + `PXTK_VERSION`) and
    `readme.txt` (`Stable tag`); add a changelog entry to both `readme.txt` and
    `CHANGELOG.md`. The tag must equal the `Version:` header or `release.yml`
    fails.
 2. Create a GitHub Release with that tag. `release.yml`'s `zip` job attaches
-   `perxel-example.zip`; the `deploy` / `assets` jobs push to WordPress.org SVN
+   `perxel-toolkit.zip`; the `deploy` / `assets` jobs push to WordPress.org SVN
    but only when the repo variable `DEPLOY_TO_WPORG` is `true` (set it once the
    first manual .org review is approved, alongside the `SVN_USERNAME` /
    `SVN_PASSWORD` secrets). Until then a Release just builds the zip and stays

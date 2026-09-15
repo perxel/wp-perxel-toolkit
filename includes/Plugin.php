@@ -1,6 +1,6 @@
 <?php
 
-namespace Perxel_Example;
+namespace Perxel_Toolkit;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -36,14 +36,16 @@ class Plugin {
 	public function boot() {
 		$this->admin = new Admin();
 		$this->admin->register();
+
+		Modules\Registry::boot();
 	}
 
 	/**
 	 * Activation hook. Seed options / create tables here.
 	 */
 	public static function activate() {
-		if ( false === get_option( PXEX_OPTION_KEY, false ) ) {
-			add_option( PXEX_OPTION_KEY, Settings::defaults() );
+		if ( false === get_option( PXTK_OPTION_KEY, false ) ) {
+			add_option( PXTK_OPTION_KEY, Settings::defaults() );
 		}
 	}
 }

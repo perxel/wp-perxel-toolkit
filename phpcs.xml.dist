@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="Perxel Example">
-	<description>Coding standards for the Perxel Example plugin.</description>
+<ruleset name="Perxel Toolkit">
+	<description>Coding standards for the Perxel Toolkit plugin.</description>
 
 	<file>.</file>
 
@@ -53,11 +53,11 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="pxex"/>
-				<element value="PXEX"/>
+				<element value="pxtk"/>
+				<element value="PXTK"/>
 				<!-- Namespace root = slug in Ucfirst_Snake form, so Plugin Check
 				     (which does not read this file) accepts it too. -->
-				<element value="Perxel_Example"/>
+				<element value="Perxel_Toolkit"/>
 				<!-- Shared admin-UI kit (vendor/perxel-ui/), versioned independently. -->
 				<element value="perxel_ui"/>
 				<element value="PERXEL_UI"/>
@@ -106,7 +106,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="perxel-example"/>
+				<element value="perxel-toolkit"/>
 			</property>
 		</properties>
 	</rule>

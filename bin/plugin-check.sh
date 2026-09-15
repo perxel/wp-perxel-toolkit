@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-SLUG="perxel-example"
+SLUG="perxel-toolkit"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 

@@ -1,13 +1,13 @@
 <?php
 
-namespace Perxel_Example;
+namespace Perxel_Toolkit;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Admin surface: one "Tools -> Perxel Example" screen, rendered inside the
+ * Admin surface: one "Tools -> Perxel Toolkit" screen, rendered inside the
  * shared Perxel UI layout (vendor/perxel-ui). Owns menu registration, asset
  * loading, the shared layout args, and the settings form handlers.
  *
@@ -17,17 +17,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Admin {
 
-	const PAGE_SETTINGS = 'pxex';
-	const PAGE_UI       = 'pxex-ui';
+	const PAGE_SETTINGS = 'pxtk';
+	const PAGE_UI       = 'pxtk-ui';
 
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'assets' ) );
 
-		add_filter( 'plugin_action_links_' . plugin_basename( PXEX_FILE ), array( $this, 'action_links' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( PXTK_FILE ), array( $this, 'action_links' ) );
 
-		add_action( 'admin_post_pxex_save_settings', array( $this, 'handle_save_settings' ) );
-		add_action( 'admin_post_pxex_reset_settings', array( $this, 'handle_reset_settings' ) );
+		add_action( 'admin_post_pxtk_save_settings', array( $this, 'handle_save_settings' ) );
+		add_action( 'admin_post_pxtk_reset_settings', array( $this, 'handle_reset_settings' ) );
 	}
 
 	/*
@@ -37,15 +37,15 @@ class Admin {
 
 	public function menu() {
 		add_management_page(
-			PXEX_NAME,
-			PXEX_NAME,
+			PXTK_NAME,
+			PXTK_NAME,
 			'manage_options',
 			self::PAGE_SETTINGS,
 			array( $this, 'render_settings' )
 		);
 
 		$titles = array(
-			self::PAGE_SETTINGS => __( 'Settings', 'perxel-example' ),
+			self::PAGE_SETTINGS => __( 'Settings', 'perxel-toolkit' ),
 		);
 
 		// The bundled UI-kit showcase - a hidden, maintainer-only screen, and
@@ -56,7 +56,7 @@ class Admin {
 		}
 
 		if ( class_exists( 'Perxel_UI_Layout' ) ) {
-			\Perxel_UI_Layout::set_page_titles( $titles, PXEX_NAME );
+			\Perxel_UI_Layout::set_page_titles( $titles, PXTK_NAME );
 		}
 	}
 
@@ -70,7 +70,7 @@ class Admin {
 		$links[] = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( admin_url( 'tools.php?page=' . self::PAGE_SETTINGS ) ),
-			esc_html__( 'Settings', 'perxel-example' )
+			esc_html__( 'Settings', 'perxel-toolkit' )
 		);
 		return $links;
 	}
@@ -109,13 +109,13 @@ class Admin {
 			\Perxel_UI::enqueue();
 		}
 
-		$css = PXEX_DIR . '/assets/css/admin.css';
-		wp_enqueue_style( 'pxex-admin', PXEX_URL . '/assets/css/admin.css', array( 'perxel-ui' ), file_exists( $css ) ? (string) filemtime( $css ) : PXEX_VERSION );
+		$css = PXTK_DIR . '/assets/css/admin.css';
+		wp_enqueue_style( 'pxtk-admin', PXTK_URL . '/assets/css/admin.css', array( 'perxel-ui' ), file_exists( $css ) ? (string) filemtime( $css ) : PXTK_VERSION );
 
 		if ( self::PAGE_SETTINGS === $page ) {
-			$js = PXEX_DIR . '/assets/js/settings.js';
-			wp_enqueue_script( 'pxex-settings', PXEX_URL . '/assets/js/settings.js', array( 'perxel-ui', 'wp-i18n' ), file_exists( $js ) ? (string) filemtime( $js ) : PXEX_VERSION, true );
-			wp_set_script_translations( 'pxex-settings', 'perxel-example', PXEX_DIR . '/languages' );
+			$js = PXTK_DIR . '/assets/js/settings.js';
+			wp_enqueue_script( 'pxtk-settings', PXTK_URL . '/assets/js/settings.js', array( 'perxel-ui', 'wp-i18n' ), file_exists( $js ) ? (string) filemtime( $js ) : PXTK_VERSION, true );
+			wp_set_script_translations( 'pxtk-settings', 'perxel-toolkit', PXTK_DIR . '/languages' );
 		}
 	}
 
@@ -128,7 +128,7 @@ class Admin {
 		static $header = null;
 		if ( null === $header ) {
 			$header = get_file_data(
-				PXEX_FILE,
+				PXTK_FILE,
 				array(
 					'name'       => 'Plugin Name',
 					'plugin_uri' => 'Plugin URI',
@@ -151,7 +151,7 @@ class Admin {
 		$header = $this->plugin_header();
 
 		$pages = array(
-			self::PAGE_SETTINGS => __( 'Settings', 'perxel-example' ),
+			self::PAGE_SETTINGS => __( 'Settings', 'perxel-toolkit' ),
 		);
 
 		if ( self::can_see_showcase() ) {
@@ -161,18 +161,18 @@ class Admin {
 		return array_merge(
 			array(
 				'title'       => $title,
-				'plugin'      => PXEX_NAME,
-				'version'     => PXEX_VERSION,
+				'plugin'      => PXTK_NAME,
+				'version'     => PXTK_VERSION,
 				'base'        => 'tools.php',
-				'wrap_class'  => 'pxex',
+				'wrap_class'  => 'pxtk',
 				'current'     => $current,
 				'menu'        => array( '' => $pages ),
-				'links'       => array( __( 'Docs', 'perxel-example' ) => $header['plugin_uri'] ),
+				'links'       => array( __( 'Docs', 'perxel-toolkit' ) => $header['plugin_uri'] ),
 				'author'      => array(
 					'name' => $header['author'],
 					'url'  => $header['author_uri'],
 				),
-				'text_domain' => 'perxel-example',
+				'text_domain' => 'perxel-toolkit',
 			),
 			$extra
 		);
@@ -197,11 +197,11 @@ class Admin {
 			return;
 		}
 
-		$path = PXEX_DIR . '/includes/views/' . $view . '.php';
+		$path = PXTK_DIR . '/includes/views/' . $view . '.php';
 
 		if ( ! $this->ui_ready() ) {
-			echo '<div class="wrap"><h1>' . esc_html( PXEX_NAME ) . '</h1>';
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'The shared Perxel UI library could not be loaded. Run bin/update-ui.sh to vendor it.', 'perxel-example' ) . '</p></div></div>';
+			echo '<div class="wrap"><h1>' . esc_html( PXTK_NAME ) . '</h1>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'The shared Perxel UI library could not be loaded. Run bin/update-ui.sh to vendor it.', 'perxel-toolkit' ) . '</p></div></div>';
 			return;
 		}
 
@@ -230,16 +230,16 @@ class Admin {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$save = get_submit_button(
-			__( 'Save settings', 'perxel-example' ),
+			__( 'Save settings', 'perxel-toolkit' ),
 			'primary',
-			'pxex-save',
+			'pxtk-save',
 			false,
-			array( 'form' => 'pxex-settings-form' )
+			array( 'form' => 'pxtk-settings-form' )
 		);
 
 		$this->screen(
 			self::PAGE_SETTINGS,
-			__( 'Settings', 'perxel-example' ),
+			__( 'Settings', 'perxel-toolkit' ),
 			'settings',
 			$vars,
 			array( 'actions' => $save )
@@ -262,9 +262,9 @@ class Admin {
 
 	public function handle_save_settings() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to do this.', 'perxel-example' ) );
+			wp_die( esc_html__( 'You are not allowed to do this.', 'perxel-toolkit' ) );
 		}
-		check_admin_referer( 'pxex_save_settings' );
+		check_admin_referer( 'pxtk_save_settings' );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked above; sanitised in Settings::sanitize().
 		$raw = wp_unslash( $_POST );
@@ -284,9 +284,9 @@ class Admin {
 
 	public function handle_reset_settings() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to do this.', 'perxel-example' ) );
+			wp_die( esc_html__( 'You are not allowed to do this.', 'perxel-toolkit' ) );
 		}
-		check_admin_referer( 'pxex_reset_settings' );
+		check_admin_referer( 'pxtk_reset_settings' );
 
 		Settings::reset();
 

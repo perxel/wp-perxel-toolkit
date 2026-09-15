@@ -45,7 +45,7 @@ jobs:
         run: |
           TAG="${{ github.event.release.tag_name || github.event.inputs.tag }}"
           TAG="${TAG#v}"
-          VER="$(grep -oE "Version:[[:space:]]*[0-9.]+" perxel-example.php | grep -oE "[0-9.]+")"
+          VER="$(grep -oE "Version:[[:space:]]*[0-9.]+" perxel-toolkit.php | grep -oE "[0-9.]+")"
           echo "tag=$TAG  plugin version=$VER"
           if [ "$TAG" != "$VER" ]; then
             echo "::error::Tag ($TAG) does not match the plugin Version header ($VER). Bump the version before tagging."
@@ -56,7 +56,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-          files: dist/perxel-example.zip
+          files: dist/perxel-toolkit.zip
           fail_on_unmatched_files: true
 
   deploy:
@@ -72,7 +72,7 @@ jobs:
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-          SLUG: perxel-example
+          SLUG: perxel-toolkit
 
   assets:
     name: Update readme and assets
@@ -87,4 +87,4 @@ jobs:
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-          SLUG: perxel-example
+          SLUG: perxel-toolkit

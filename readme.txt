@@ -1,4 +1,4 @@
-=== Perxel Example ===
+=== Perxel Toolkit ===
 Contributors: phucbm
 Tags: tag-one, tag-two
 Requires at least: 6.5
@@ -8,18 +8,25 @@ Stable tag: 0.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A short description of what this plugin does. One or two sentences, under 150 characters.
+Toggleable admin/editor features and third-party plugin integrations shared across Perxel projects.
 
 == Description ==
 
-A longer description of what the plugin does and who it is for. Explain the
-problem it solves and how it works in two or three short paragraphs.
+Perxel Toolkit bundles the small admin/editor features and plugin
+integrations we re-add on every project (editor restrictions, admin page
+guarding, featured images/posts, Gravity Forms and ACF/SCF tweaks, Nectarblocks
+block visibility) into one plugin with a single settings screen, so updating
+them across client sites is a plugin update instead of a file diff.
 
 **Key features**
 
-* Feature one
-* Feature two
-* Feature three
+* Editor Restrictions - lock down block-editor capabilities for non-admin roles
+* Admin Page Guard - restrict selected admin pages to allowed users
+* Featured Image Column - featured-image column with quick-edit on the post list
+* Featured Posts - a featured checkbox on posts with native query support
+* Gravity Forms integration - run multiple instances of the same form per page
+* ACF/SCF integration - route field-group JSON to per-block/per-location paths
+* Nectarblocks integration - hide default core blocks, keep only project blocks
 
 == External services ==
 
@@ -33,9 +40,9 @@ This plugin does not connect to any external services.
 
 == Installation ==
 
-1. Upload the plugin to `/wp-content/plugins/perxel-example`, or install it from the Plugins screen.
+1. Upload the plugin to `/wp-content/plugins/perxel-toolkit`, or install it from the Plugins screen.
 2. Activate it.
-3. Go to **Tools -> Perxel Example** to configure it.
+3. Go to **Tools -> Perxel Toolkit** to configure it.
 
 == Frequently Asked Questions ==
 

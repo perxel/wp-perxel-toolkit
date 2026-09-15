@@ -1,12 +1,21 @@
 /*
  * Plugin-local admin styles. The layout and every component come from the
  * shared UI kit (enqueued as `perxel-ui`); this file is only for bits that are
- * specific to this plugin. Scope every rule under `.pxex` so nothing leaks
+ * specific to this plugin. Scope every rule under `.pxtk` so nothing leaks
  * into the rest of wp-admin.
  */
 
-.pxex input[type="password"],
-.pxex input[type="text"] {
+.pxtk input[type="password"],
+.pxtk input[type="text"] {
 	min-width: 320px;
 	max-width: 100%;
+}
+
+.pxtk .pxui-toggle:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.pxtk .pxtk-dependency-notice {
+	color: #b32d2e;
 }

@@ -4,14 +4,14 @@
  * screen. Remove the settings option here, plus any custom tables or extra
  * options the plugin created.
  *
- * @package Perxel_Example
+ * @package Perxel_Toolkit
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-delete_option( 'pxex_settings' );
+delete_option( 'pxtk_settings' );
 
 /*
  * If the plugin creates custom tables, drop them here through an

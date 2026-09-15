@@ -38,18 +38,18 @@ jobs:
         run: bin/build-zip.sh
 
       - name: Unpack the build
-        run: unzip -q dist/perxel-example.zip -d build
+        run: unzip -q dist/perxel-toolkit.zip -d build
 
       - name: Run Plugin Check
         uses: wordpress/plugin-check-action@v1
         with:
-          build-dir: ./build/perxel-example
-          # The repo is github.com/perxel/wp-example but the WordPress.org
-          # slug (and text domain) is perxel-example. Without this, every
+          build-dir: ./build/perxel-toolkit
+          # The repo is github.com/perxel/wp-perxel-toolkit but the WordPress.org
+          # slug (and text domain) is perxel-toolkit. Without this, every
           # __() call reads as a text-domain mismatch.
-          slug: perxel-example
+          slug: perxel-toolkit
           # Plugin Check runs its OWN ruleset - it does not read phpcs.xml.dist.
-          # The base template needs no ignores (the Perxel_Example namespace is
+          # The base template needs no ignores (the Perxel_Toolkit namespace is
           # slug-shaped, tables use %i). When you add code that trips a
           # *documented* false positive, list the sniff code here AND mirror the
           # exclusion in phpcs.xml.dist. Common cases:

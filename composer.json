@@ -1,6 +1,6 @@
 {
-	"name": "perxel/perxel-example",
-	"description": "A short description of what this plugin does.",
+	"name": "perxel/perxel-toolkit",
+	"description": "Toggleable admin/editor features and third-party plugin integrations shared across Perxel projects.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"require": {
