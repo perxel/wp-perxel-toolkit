@@ -36,12 +36,16 @@ class Acf extends Module {
 
 	public static function dependency(): array {
 		return array(
-			'label'       => __( 'Advanced Custom Fields', 'perxel-toolkit' ),
+			// Either plugin satisfies this integration - both register the
+			// `ACF` class, so the check() below covers either - but suggest
+			// Secure Custom Fields, the free official successor, over the
+			// original ACF plugin.
+			'label'       => __( 'Advanced Custom Fields or Secure Custom Fields', 'perxel-toolkit' ),
 			'check'       => static function () {
 				return class_exists( 'ACF' );
 			},
-			'wporg_slug'  => 'advanced-custom-fields',
-			'install_url' => 'https://wordpress.org/plugins/advanced-custom-fields/',
+			'wporg_slug'  => 'secure-custom-fields',
+			'install_url' => 'https://wordpress.org/plugins/secure-custom-fields/',
 		);
 	}
 

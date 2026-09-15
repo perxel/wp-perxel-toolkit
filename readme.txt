@@ -4,7 +4,7 @@ Tags: tag-one, tag-two
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.0.1
+Stable tag: 0.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -60,6 +60,12 @@ posts or media library is left untouched.
 1. The Settings screen.
 
 == Changelog ==
+
+= 0.0.2 =
+* Add a Recommended Plugins section to the settings screen - Perxel's curated per-project plugin list, with a one-click install for anything on wordpress.org.
+* ACF/SCF integration now suggests installing Secure Custom Fields (the free official successor) instead of the original Advanced Custom Fields plugin.
+* Add per-module settings fields (toggle, roles, free-text list), starting with Editor Restrictions.
+* Move Admin Page Guard into its own "Access Control" group with a dedicated settings screen for allowed users and restricted pages, including a "View as" preview.
 
 = 0.0.1 =
 * First release.

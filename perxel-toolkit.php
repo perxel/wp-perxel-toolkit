@@ -3,7 +3,7 @@
  * Plugin Name:       Perxel Toolkit
  * Plugin URI:        https://github.com/perxel/wp-perxel-toolkit
  * Description:        Toggleable admin/editor features and third-party plugin integrations shared across Perxel projects.
- * Version:           0.0.1
+ * Version:           0.0.2
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Perxel
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PXTK_VERSION', '0.0.1' );
+define( 'PXTK_VERSION', '0.0.2' );
 define( 'PXTK_FILE', __FILE__ );
 define( 'PXTK_DIR', __DIR__ );
 define( 'PXTK_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
