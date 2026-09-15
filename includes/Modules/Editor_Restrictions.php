@@ -9,7 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Restricts block-editor capabilities for non-administrator roles.
+ * Restricts block-editor (Gutenberg) capabilities for non-administrator
+ * roles. Has no effect on the Classic Editor - it only touches settings
+ * `block_editor_settings_all` exposes to the block editor itself.
  *
  * Ported from wp-mu-plugins/editor-restrictions.php. Roles and capabilities
  * are configured on the settings screen (see settings_fields()); the
@@ -40,24 +42,28 @@ class Editor_Restrictions extends Module {
 				'key'     => 'restricted_roles',
 				'type'    => 'roles',
 				'label'   => __( 'Restricted roles', 'perxel-toolkit' ),
+				'desc'    => __( 'Roles the capabilities below apply to, in the block editor (Gutenberg) only. Administrators are never restricted.', 'perxel-toolkit' ),
 				'default' => array( 'editor', 'author', 'contributor', 'subscriber' ),
 			),
 			array(
 				'key'     => 'disable_block_locking',
 				'type'    => 'toggle',
 				'label'   => __( 'Disable block locking', 'perxel-toolkit' ),
+				'desc'    => __( 'Hides the "Lock" option on blocks (Options menu -> Lock), which restricted roles could otherwise use to prevent a block from being moved, removed, or edited.', 'perxel-toolkit' ),
 				'default' => true,
 			),
 			array(
 				'key'     => 'disable_code_editor',
 				'type'    => 'toggle',
 				'label'   => __( 'Disable code editor mode', 'perxel-toolkit' ),
+				'desc'    => __( 'Hides the block editor\'s "Code editor" view (Options menu -> Code editor), which lets you edit a post\'s raw block HTML directly.', 'perxel-toolkit' ),
 				'default' => true,
 			),
 			array(
 				'key'     => 'disable_unfiltered_html',
 				'type'    => 'toggle',
 				'label'   => __( 'Disable unfiltered HTML', 'perxel-toolkit' ),
+				'desc'    => __( 'Strips raw/unsafe HTML typed into the block editor (e.g. in a Custom HTML block) for restricted roles, the same as WordPress already does for any role without the unfiltered_html capability.', 'perxel-toolkit' ),
 				'default' => true,
 			),
 		);

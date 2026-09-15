@@ -152,6 +152,17 @@ class Settings {
 	}
 
 	/**
+	 * Set one module's on/off state directly - used by a module's own
+	 * dedicated settings_page(), where its toggle lives on that screen
+	 * instead of the main settings form's sanitize().
+	 */
+	public static function set_module_enabled( string $slug, bool $enabled ): void {
+		$modules          = self::get( 'modules' );
+		$modules[ $slug ] = $enabled;
+		self::update( array( 'modules' => $modules ) );
+	}
+
+	/**
 	 * @param array $values Partial or full settings.
 	 */
 	public static function update( array $values ): void {

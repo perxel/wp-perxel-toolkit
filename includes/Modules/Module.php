@@ -69,9 +69,12 @@ abstract class Module {
 	 * default) means the module has no configurable fields beyond its
 	 * on/off toggle.
 	 *
-	 * Each field is `[ 'key', 'type', 'label', 'default' ]`. `key` must be
-	 * unique within the module and stable (stored under it, never rename in
-	 * place). `type` is one of:
+	 * Each field is `[ 'key', 'type', 'label', 'default', 'desc'? ]`. `key`
+	 * must be unique within the module and stable (stored under it, never
+	 * rename in place). `desc` is an optional line of plain-text help shown
+	 * under the label - use it whenever the label alone doesn't say what the
+	 * field actually does (which editor it affects, what a toggle disables,
+	 * who's exempt). `type` is one of:
 	 *  - 'toggle': a single on/off switch. `default` is bool.
 	 *  - 'roles':  a multi-select of the site's roles (administrator
 	 *              excluded). `default` is a string[] of role slugs.
@@ -105,7 +108,7 @@ abstract class Module {
 	 * "Configure" accordion (views/settings.php) and a module's own
 	 * dedicated settings page. Empty array when the module has no fields.
 	 *
-	 * @return array<int,array{label:string,content:string}>
+	 * @return array<int,array{label:string,sub:string,content:string}>
 	 */
 	public static function field_rows(): array {
 		$fields = static::settings_fields();
@@ -152,6 +155,7 @@ abstract class Module {
 
 			$rows[] = array(
 				'label'   => $field['label'],
+				'sub'     => isset( $field['desc'] ) ? esc_html( $field['desc'] ) : '',
 				'content' => $control,
 			);
 		}
