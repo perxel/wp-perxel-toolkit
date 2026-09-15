@@ -2,6 +2,9 @@
 
 namespace Perxel_Toolkit\Modules;
 
+use Perxel_Toolkit\Admin;
+use Perxel_Toolkit\Settings;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -10,12 +13,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Restricts access to specific admin pages - redirects unauthorized users
  * to the dashboard and hides the matching menu items.
  *
- * Ported from wp-mu-plugins/admin-page-guard.php. The original hardcoded a
- * per-client allowed-user and restricted-page list; both are empty by
- * default here (inert until configured) and filterable per project until
- * this module gets its own settings UI.
+ * Ported from wp-mu-plugins/admin-page-guard.php. The allowed-user and
+ * restricted-page lists are configured on the module's own settings screen
+ * (Admin::PAGE_ADMIN_PAGE_GUARD, see settings_fields()); the
+ * pxtk_admin_page_guard_* filters still apply on top of the stored values,
+ * for a project's theme to override via functions.php.
  */
 class Admin_Page_Guard extends Module {
+
+	const VIEW_AS_ACTION = 'pxtk_view_as_restricted';
 
 	public static function slug(): string {
 		return 'admin-page-guard';
@@ -30,17 +36,73 @@ class Admin_Page_Guard extends Module {
 	}
 
 	public static function group(): string {
-		return 'feature';
+		return 'security';
+	}
+
+	public static function settings_page(): ?string {
+		return Admin::PAGE_ADMIN_PAGE_GUARD;
+	}
+
+	public static function settings_fields(): array {
+		return array(
+			array(
+				'key'     => 'allowed_users',
+				'type'    => 'list',
+				'label'   => __( 'Allowed users', 'perxel-toolkit' ),
+				'default' => array(),
+			),
+			array(
+				'key'     => 'restricted_pages',
+				'type'    => 'list',
+				'label'   => __( 'Restricted pages', 'perxel-toolkit' ),
+				'default' => array(),
+			),
+		);
 	}
 
 	/** User logins exempt from every restriction. */
 	public static function allowed_users(): array {
-		return (array) apply_filters( 'pxtk_admin_page_guard_allowed_users', array() );
+		$stored = Settings::module_settings( self::slug() )['allowed_users'] ?? array();
+		return (array) apply_filters( 'pxtk_admin_page_guard_allowed_users', $stored );
 	}
 
 	/** wp-admin URLs (as pasted from the address bar) to restrict. */
 	public static function restricted_pages(): array {
-		return (array) apply_filters( 'pxtk_admin_page_guard_restricted_pages', array() );
+		$stored = Settings::module_settings( self::slug() )['restricted_pages'] ?? array();
+		return (array) apply_filters( 'pxtk_admin_page_guard_restricted_pages', $stored );
+	}
+
+	/**
+	 * A link that reloads $page_url with a one-off, nonce-protected "view as
+	 * restricted user" flag - used by the "View as" button on the settings
+	 * screen to demonstrate the redirect without switching users. Nothing is
+	 * persisted: the flag only affects the single page load it's present on.
+	 *
+	 * @param string $page_url Restricted admin URL to preview.
+	 */
+	public static function view_as_url( string $page_url ): string {
+		return wp_nonce_url(
+			add_query_arg( self::VIEW_AS_ACTION, '1', $page_url ),
+			self::VIEW_AS_ACTION
+		);
+	}
+
+	/**
+	 * Whether this request is a "View as" preview - gated to users who can
+	 * already manage the guard's settings, so previewing never grants a
+	 * capability, only simulates losing the allowed-user exemption.
+	 */
+	private static function is_previewing_as_restricted(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified via wp_verify_nonce() below.
+		if ( empty( $_GET[ self::VIEW_AS_ACTION ] ) || ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+
+		return (bool) wp_verify_nonce(
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- this is the verification.
+			isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '',
+			self::VIEW_AS_ACTION
+		);
 	}
 
 	public function register(): void {
@@ -124,6 +186,10 @@ class Admin_Page_Guard extends Module {
 	}
 
 	private function current_user_is_allowed(): bool {
+		if ( self::is_previewing_as_restricted() ) {
+			return false;
+		}
+
 		$current_user = wp_get_current_user();
 		return in_array( $current_user->user_login, self::allowed_users(), true );
 	}

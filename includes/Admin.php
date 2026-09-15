@@ -2,23 +2,29 @@
 
 namespace Perxel_Toolkit;
 
+use Perxel_Toolkit\Modules\Admin_Page_Guard;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Admin surface: one "Tools -> Perxel Toolkit" screen, rendered inside the
- * shared Perxel UI layout (vendor/perxel-ui). Owns menu registration, asset
+ * Admin surface: one or more "Tools ->" screens, rendered inside the shared
+ * Perxel UI layout (vendor/perxel-ui). Owns menu registration, asset
  * loading, the shared layout args, and the settings form handlers.
  *
- * Add screens by giving each a slug constant, an off-menu add_submenu_page()
- * call in menu(), a $titles entry, and a render_*() callback that delegates to
- * screen(). The kit's in-page sidebar nav links them together.
+ * Add a screen visible in the WP admin menu by giving it a slug constant, an
+ * add_management_page() call in menu(), a $titles entry, and a render_*()
+ * callback that delegates to screen() - or add_submenu_page( null, ... ) for
+ * one reachable only via a link (e.g. the UI-kit showcase). Either way, add
+ * it to layout_args()'s $pages too: the kit's in-page sidebar nav links every
+ * page in that list together regardless of its own WP-menu visibility.
  */
 class Admin {
 
 	const PAGE_SETTINGS = 'pxtk';
-	const PAGE_UI       = 'pxtk-ui';
+	const PAGE_ADMIN_PAGE_GUARD = 'pxtk-admin-page-guard';
+	const PAGE_UI = 'pxtk-ui';
 
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
@@ -28,6 +34,7 @@ class Admin {
 
 		add_action( 'admin_post_pxtk_save_settings', array( $this, 'handle_save_settings' ) );
 		add_action( 'admin_post_pxtk_reset_settings', array( $this, 'handle_reset_settings' ) );
+		add_action( 'admin_post_pxtk_save_admin_page_guard', array( $this, 'handle_save_admin_page_guard' ) );
 	}
 
 	/*
@@ -44,8 +51,17 @@ class Admin {
 			array( $this, 'render_settings' )
 		);
 
+		add_management_page(
+			Admin_Page_Guard::label(),
+			Admin_Page_Guard::label(),
+			'manage_options',
+			self::PAGE_ADMIN_PAGE_GUARD,
+			array( $this, 'render_admin_page_guard' )
+		);
+
 		$titles = array(
-			self::PAGE_SETTINGS => __( 'Settings', 'perxel-toolkit' ),
+			self::PAGE_SETTINGS         => __( 'Settings', 'perxel-toolkit' ),
+			self::PAGE_ADMIN_PAGE_GUARD => Admin_Page_Guard::label(),
 		);
 
 		// The bundled UI-kit showcase - a hidden, maintainer-only screen, and
@@ -101,7 +117,9 @@ class Admin {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen switch.
 		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
-		if ( ! in_array( $page, array( self::PAGE_SETTINGS, self::PAGE_UI ), true ) ) {
+		$pages = array( self::PAGE_SETTINGS, self::PAGE_ADMIN_PAGE_GUARD, self::PAGE_UI );
+
+		if ( ! in_array( $page, $pages, true ) ) {
 			return;
 		}
 
@@ -151,7 +169,8 @@ class Admin {
 		$header = $this->plugin_header();
 
 		$pages = array(
-			self::PAGE_SETTINGS => __( 'Settings', 'perxel-toolkit' ),
+			self::PAGE_SETTINGS         => __( 'Settings', 'perxel-toolkit' ),
+			self::PAGE_ADMIN_PAGE_GUARD => Admin_Page_Guard::label(),
 		);
 
 		if ( self::can_see_showcase() ) {
@@ -246,6 +265,30 @@ class Admin {
 		);
 	}
 
+	public function render_admin_page_guard() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- display-only flash flag set by our own redirect.
+		$vars = array(
+			'updated' => isset( $_GET['updated'] ),
+		);
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		$save = get_submit_button(
+			__( 'Save changes', 'perxel-toolkit' ),
+			'primary',
+			'pxtk-save-admin-page-guard',
+			false,
+			array( 'form' => 'pxtk-admin-page-guard-form' )
+		);
+
+		$this->screen(
+			self::PAGE_ADMIN_PAGE_GUARD,
+			Admin_Page_Guard::label(),
+			'admin-page-guard',
+			$vars,
+			array( 'actions' => $save )
+		);
+	}
+
 	public function render_ui() {
 		if ( ! self::can_see_showcase() || ! $this->ui_ready() ) {
 			return;
@@ -274,6 +317,31 @@ class Admin {
 			add_query_arg(
 				array(
 					'page'    => self::PAGE_SETTINGS,
+					'updated' => '1',
+				),
+				admin_url( 'tools.php' )
+			)
+		);
+		exit;
+	}
+
+	public function handle_save_admin_page_guard() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do this.', 'perxel-toolkit' ) );
+		}
+		check_admin_referer( 'pxtk_save_admin_page_guard' );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked above; sanitised in Settings::sanitize_module_fields().
+		$raw    = wp_unslash( $_POST );
+		$slug   = Admin_Page_Guard::slug();
+		$values = isset( $raw['module_settings'][ $slug ] ) && is_array( $raw['module_settings'][ $slug ] ) ? $raw['module_settings'][ $slug ] : array();
+
+		Settings::update_module_settings( $slug, Settings::sanitize_module_fields( Admin_Page_Guard::class, $values ) );
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'    => self::PAGE_ADMIN_PAGE_GUARD,
 					'updated' => '1',
 				),
 				admin_url( 'tools.php' )

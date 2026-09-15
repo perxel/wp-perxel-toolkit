@@ -2,6 +2,8 @@
 
 namespace Perxel_Toolkit\Modules;
 
+use Perxel_Toolkit\Settings;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -73,6 +75,12 @@ abstract class Module {
 	 *  - 'toggle': a single on/off switch. `default` is bool.
 	 *  - 'roles':  a multi-select of the site's roles (administrator
 	 *              excluded). `default` is a string[] of role slugs.
+	 *  - 'list':   a free-text list, one entry per line (e.g. user logins,
+	 *              URLs). `default` is a string[].
+	 *
+	 * Rendered either inline as a "Configure" disclosure on the main
+	 * settings screen, or on the module's own settings_page() - see
+	 * field_rows().
 	 *
 	 * @return array<int,array{key:string,type:string,label:string,default:mixed}>
 	 */
@@ -89,6 +97,66 @@ abstract class Module {
 			$defaults[ $field['key'] ] = $field['default'] ?? null;
 		}
 		return $defaults;
+	}
+
+	/**
+	 * Render this module's settings_fields(), pre-filled with its current
+	 * stored values, as Perxel_UI::rows() row specs. Shared by the inline
+	 * "Configure" accordion (views/settings.php) and a module's own
+	 * dedicated settings page. Empty array when the module has no fields.
+	 *
+	 * @return array<int,array{label:string,content:string}>
+	 */
+	public static function field_rows(): array {
+		$fields = static::settings_fields();
+		if ( ! $fields ) {
+			return array();
+		}
+
+		$values = Settings::module_settings( static::slug() );
+		$roles  = wp_roles()->get_names();
+		unset( $roles['administrator'] );
+
+		$rows = array();
+
+		foreach ( $fields as $field ) {
+			$key   = $field['key'];
+			$value = $values[ $key ] ?? $field['default'];
+			$name  = 'module_settings[' . static::slug() . '][' . $key . ']';
+
+			switch ( $field['type'] ) {
+				case 'roles':
+					$control = \Perxel_UI::checkbox_group(
+						array(
+							'name'     => $name,
+							'options'  => $roles,
+							'selected' => (array) $value,
+						)
+					);
+					break;
+
+				case 'list':
+					$control = '<textarea name="' . esc_attr( $name ) . '" rows="4" class="large-text code">'
+						. esc_textarea( implode( "\n", (array) $value ) ) . '</textarea>';
+					break;
+
+				default: // 'toggle'.
+					$control = \Perxel_UI::toggle(
+						array(
+							'name'    => $name,
+							'checked' => ! empty( $value ),
+							'label'   => $field['label'],
+						)
+					);
+			}
+
+			$rows[] = array(
+				'label'   => $field['label'],
+				'content' => $control,
+			);
+		}
+
+		return $rows;
 	}
 
 	/**

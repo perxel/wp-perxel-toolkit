@@ -83,6 +83,61 @@ class Settings {
 	}
 
 	/**
+	 * Save one module's settings_fields() values, leaving every other
+	 * module's stored settings untouched. Used by a module's own dedicated
+	 * settings page (see Module::settings_page()); the main settings form
+	 * saves every module's fields at once via sanitize() instead.
+	 *
+	 * @param string               $slug   Module slug.
+	 * @param array<string,mixed>  $values Already-sanitised field values.
+	 */
+	public static function update_module_settings( string $slug, array $values ): void {
+		$module_settings = self::get( 'module_settings' );
+		$module_settings[ $slug ] = $values;
+		self::update( array( 'module_settings' => $module_settings ) );
+	}
+
+	/**
+	 * Sanitise one module's settings_fields() values from raw input, by
+	 * field type. Shared by the main settings form (sanitize(), all modules
+	 * at once) and a module's own dedicated settings page (one module).
+	 *
+	 * @param class-string<\Perxel_Toolkit\Modules\Module> $module Module class.
+	 * @param array                                         $values Raw field values (already unslashed), keyed by field key.
+	 * @return array<string,mixed>
+	 */
+	public static function sanitize_module_fields( string $module, array $values ): array {
+		$sanitized = array();
+
+		foreach ( $module::settings_fields() as $field ) {
+			$key = $field['key'];
+
+			switch ( $field['type'] ) {
+				case 'roles':
+					$roles             = array_keys( wp_roles()->roles );
+					$sanitized[ $key ] = array_values(
+						array_intersect(
+							array_map( 'sanitize_key', (array) ( $values[ $key ] ?? array() ) ),
+							$roles
+						)
+					);
+					break;
+
+				case 'list':
+					$lines             = preg_split( '/[\r\n]+/', (string) ( $values[ $key ] ?? '' ) );
+					$lines             = array_filter( array_map( 'trim', $lines ), 'strlen' );
+					$sanitized[ $key ] = array_values( array_unique( $lines ) );
+					break;
+
+				default: // 'toggle'.
+					$sanitized[ $key ] = ! empty( $values[ $key ] );
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
 	 * @param string $key One of the defaults keys.
 	 * @return mixed
 	 */
@@ -146,27 +201,17 @@ class Settings {
 				continue;
 			}
 
-			$values    = isset( $submitted_settings[ $slug ] ) && is_array( $submitted_settings[ $slug ] ) ? $submitted_settings[ $slug ] : array();
-			$sanitized = array();
-
-			foreach ( $fields as $field ) {
-				$key = $field['key'];
-
-				if ( 'roles' === $field['type'] ) {
-					$roles                = array_keys( wp_roles()->roles );
-					$sanitized[ $key ]    = array_values(
-						array_intersect(
-							array_map( 'sanitize_key', (array) ( $values[ $key ] ?? array() ) ),
-							$roles
-						)
-					);
-					continue;
-				}
-
-				$sanitized[ $key ] = ! empty( $values[ $key ] );
+			// A module with its own dedicated settings_page() doesn't render
+			// its fields on this form, so there is nothing to read here -
+			// preserve its stored values instead of zeroing them out.
+			if ( $module::settings_page() ) {
+				$module_settings[ $slug ] = $current_settings[ $slug ] ?? $module::default_settings();
+				continue;
 			}
 
-			$module_settings[ $slug ] = $sanitized;
+			$values = isset( $submitted_settings[ $slug ] ) && is_array( $submitted_settings[ $slug ] ) ? $submitted_settings[ $slug ] : array();
+
+			$module_settings[ $slug ] = self::sanitize_module_fields( $module, $values );
 		}
 
 		return array(
