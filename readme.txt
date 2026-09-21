@@ -59,7 +59,9 @@ posts or media library is left untouched.
 
 == Screenshots ==
 
-1. The Settings screen.
+1. Settings: turn features and integrations on or off, with per-feature options.
+2. Recommended Plugins: the plugins Perxel recommends for every project, with one-click install.
+3. Admin Page Guard: restrict selected admin pages to allowed users, with a "view as" preview.
 
 == Changelog ==
 

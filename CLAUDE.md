@@ -14,6 +14,11 @@ extended with a module system (see "Modules" below) - the toolkit bundles
 several small admin/editor features and plugin integrations behind one
 settings screen instead of shipping them as separate mu-plugins per client.
 
+**Upstream rule:** the starter is the source of truth for shared process - CI,
+release/deploy, WordPress.org compliance rules, `.distignore`, build scripts. If
+you improve one of those here, make the same change in the starter too (or tell
+the maintainer). Plugin-specific code and listing art stay here.
+
 ## Layout
 
 ```
@@ -199,13 +204,20 @@ Any suppression for a documented false positive goes in *both* places -
 
 1. Bump the version in `perxel-toolkit.php` (header + `PXTK_VERSION`) and
    `readme.txt` (`Stable tag`); add a changelog entry to both `readme.txt` and
-   `CHANGELOG.md`. The tag must equal the `Version:` header or `release.yml`
-   fails.
-2. Create a GitHub Release with that tag. `release.yml`'s `zip` job attaches
-   `perxel-toolkit.zip`; the `deploy` / `assets` jobs push to WordPress.org SVN
-   but only when the repo variable `DEPLOY_TO_WPORG` is `true` (set it once the
-   first manual .org review is approved, alongside the `SVN_USERNAME` /
-   `SVN_PASSWORD` secrets). Until then a Release just builds the zip and stays
-   green.
+   `CHANGELOG.md`. Tag, plugin `Version:` and `Stable tag` must all match or the
+   `deploy` job fails.
+2. Create a GitHub Release with that tag. `release.yml` attaches
+   `perxel-toolkit.zip` and, when the repo variable `DEPLOY_TO_WPORG` is `true`,
+   the `deploy` job runs the SHA-pinned 10up action: trunk + `tags/<version>` +
+   `.wordpress-org/` (banners, icons, screenshots) to SVN. It needs the org
+   secrets `SVN_USERNAME` / `SVN_PASSWORD` (shared with this repo).
+3. Until the first manual .org review is approved, leave `DEPLOY_TO_WPORG` unset:
+   a Release just builds the zip and stays green. After approval, set it and
+   test with Actions -> Release -> Run workflow (dry run is the default).
+
+The full process (first submission, org secrets, dry run, gotchas) is owned by
+the starter, https://github.com/perxel/wp-plugin-starter (`CLAUDE.md` ->
+"Releasing"). If you improve the shared process here, make the same change in
+the starter.
 
 Build artifacts (`dist/`) are never committed.
