@@ -8,7 +8,6 @@
 /.claude
 /.idea
 /.wordpress-org
-/assets-src
 /bin
 /dist
 /node_modules
@@ -19,7 +18,8 @@
 .distignore
 .gitignore
 .editorconfig
-AGENTS.md
+.plugin-check-ignore
+.env.local
 CLAUDE.md
 README.md
 composer.json
