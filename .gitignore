@@ -9,3 +9,4 @@ package-lock.json
 *.log
 /.idea/
 /dist/
+.env.local

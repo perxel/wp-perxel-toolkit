@@ -1,6 +1,7 @@
 # CLAUDE.md
 
-Guidance for working on this repository.
+Guidance for working on this repository. This is the **only** agent/maintainer
+document (see "Documentation rules" below).
 
 ## What this is
 
@@ -19,6 +20,27 @@ release/deploy, WordPress.org compliance rules, `.distignore`, build scripts. If
 you improve one of those here, make the same change in the starter too (or tell
 the maintainer). Plugin-specific code and listing art stay here.
 
+## Documentation rules
+
+Every Perxel plugin follows these; they are owned by the starter.
+
+- **`README.md` is public-facing only**: what the plugin does, screenshots,
+  install, requirements, what data it stores / external services, license. No
+  architecture, folder layout, build/lint/release steps, or "how to extend" -
+  none of that belongs on the public page.
+- **`CLAUDE.md` is the one and only file for developers and agents**:
+  architecture, conventions, compliance, releasing. There is **no `AGENTS.md`**
+  (and no second "playbook" file) - do not recreate it or duplicate content
+  across the two. Claude Code reads `CLAUDE.md`; other agents can be pointed at it.
+- `readme.txt` is the WordPress.org listing, `CHANGELOG.md` (optional) the
+  changelog. Neither carries developer guidance.
+- Master/source art for `.wordpress-org/` lives in `.claude/assets-src/`.
+- `.env.local` holds credentials: never commit it (it is in `.gitignore`).
+- `bin/*.sh` derive the slug from the main plugin file, so they are byte-identical
+  across plugins - never hard-code a slug in them. Per-plugin Plugin Check
+  suppressions go in `.plugin-check-ignore`.
+- `languages/` is optional; `.org` auto-loads translations.
+
 ## Layout
 
 ```
@@ -33,6 +55,9 @@ languages/                  .pot template
 readme.txt                  WordPress.org listing (keep in sync with README.md + version)
 .wordpress-org/             Listing assets (icon, banner, screenshots) - not shipped
 .github/workflows/          lint.yml (PHPCS + Plugin Check), release.yml
+bin/                        build-zip.sh, plugin-check.sh, update-ui.sh - identical in every plugin
+.plugin-check-ignore        Documented Plugin Check false positives (mirrored in lint.yml)
+.claude/assets-src/         Master/source art for the listing assets - committed, not shipped
 ```
 
 `includes/` is loaded by the `spl_autoload_register` in the main file (not
@@ -71,6 +96,12 @@ class extending `Modules\Module`, listed in `Modules\Registry::MODULES`.
   false the settings screen greys the row out and shows the install
   action instead of letting the toggle be flipped. E.g. `Gravity_Forms`,
   `Acf`, `Nectarblocks`.
+
+**Adding a module:** add `includes/Modules/<Name>.php` extending
+`Modules\Module` (`slug()`, `label()`, `description()`, `group()`, `register()`;
+an integration also overrides `dependency()`), then add the class to
+`Modules\Registry::MODULES`. The settings screen, availability detection and
+enable/disable persistence follow from that - no other wiring.
 
 Every module is currently toggle-only - no per-module settings UI yet.
 Where the ported mu-plugin had its own per-client config (allowed users,
@@ -198,7 +229,7 @@ Rules that are not obvious and cost real time when re-derived per plugin:
 The split that bites: **Plugin Check runs its own ruleset, not `phpcs.xml.dist`.**
 Any suppression for a documented false positive goes in *both* places -
 `phpcs.xml.dist` (for `composer run lint`) and `lint.yml` -> `ignore-codes`
-(mirrored by `bin/plugin-check.sh`).
+(mirrored in `.plugin-check-ignore`, which `bin/plugin-check.sh` reads).
 
 ## Releasing
 

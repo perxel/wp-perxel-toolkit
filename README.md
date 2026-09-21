@@ -15,22 +15,5 @@ Activate it and go to **Tools -> Perxel Toolkit**. Two groups of toggles:
   Nectar Blocks plugin is active, hides default core blocks so the inserter
   only offers Nectar Blocks + the project's own custom blocks).
 
-Every module is currently a single on/off toggle; per-module settings
-(which post types, which pages, etc.) are exposed as filters for now (see
-each class under `includes/Modules/`) until they get their own UI here.
-
-Scaffolded from [`perxel/wp-plugin-starter`](https://github.com/perxel/wp-plugin-starter);
-see [CLAUDE.md](CLAUDE.md) for the full architecture, conventions, and
-release process.
-
-## Adding a module
-
-1. Add `includes/Modules/<Name>.php` extending `Modules\Module`: `slug()`,
-   `label()`, `description()`, `group()` (`feature` or `integration`), and
-   `register()`. An integration module also overrides `dependency()` -
-   `label`, a `check` callable, and either `wporg_slug` (one-click install)
-   or `install_url` (plain link).
-2. Add the class to `Modules\Registry::MODULES`.
-
-The settings screen, availability detection, and enable/disable persistence
-all follow from that - no other wiring needed.
+Every module is currently a single on/off toggle; finer per-module options
+(which post types, which pages, etc.) are exposed as WordPress filters.
