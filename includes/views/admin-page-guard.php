@@ -14,6 +14,7 @@
  * @var bool $updated Whether the form just saved.
  */
 
+use Perxel_Toolkit\Admin;
 use Perxel_Toolkit\Modules\Admin_Page_Guard;
 use Perxel_Toolkit\Settings;
 
@@ -21,16 +22,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Perxel_UI escapes structure; dynamic values escaped inline.
-
 if ( $updated ) {
-	echo \Perxel_UI::notice( 'success', esc_html__( 'Settings saved.', 'perxel-toolkit' ), array( 'dismissible' => true ) );
+	Admin::kit( \Perxel_UI::notice( 'success', esc_html__( 'Settings saved.', 'perxel-toolkit' ), array( 'dismissible' => true ) ) );
 }
 
 if ( Admin_Page_Guard::is_previewing_as_restricted() ) {
-	echo \Perxel_UI::notice(
-		'warning',
-		esc_html__( 'Previewing as a not-allowed user - restricted pages are hidden from the menu on this load only. Use "Back to normal view" above to exit.', 'perxel-toolkit' )
+	Admin::kit(
+		\Perxel_UI::notice(
+			'warning',
+			esc_html__( 'Previewing as a not-allowed user - restricted pages are hidden from the menu on this load only. Use "Back to normal view" above to exit.', 'perxel-toolkit' )
+		)
 	);
 }
 
@@ -41,32 +42,32 @@ $pxtk_slug = Admin_Page_Guard::slug();
 	<?php wp_nonce_field( 'pxtk_save_admin_page_guard' ); ?>
 
 	<?php
-	echo \Perxel_UI::rows(
-		array(
+	Admin::kit(
+		\Perxel_UI::rows(
 			array(
-				'rows' => array(
-					array(
-						'label'   => Admin_Page_Guard::label(),
-						'sub'     => esc_html( Admin_Page_Guard::description() ),
-						'content' => \Perxel_UI::toggle(
-							array(
-								'name'    => 'modules[' . $pxtk_slug . ']',
-								'checked' => Settings::is_module_enabled( $pxtk_slug ),
-								'label'   => Admin_Page_Guard::label(),
-							)
+				array(
+					'rows' => array(
+						array(
+							'label'   => Admin_Page_Guard::label(),
+							'sub'     => esc_html( Admin_Page_Guard::description() ),
+							'content' => \Perxel_UI::toggle(
+								array(
+									'name'    => 'modules[' . $pxtk_slug . ']',
+									'checked' => Settings::is_module_enabled( $pxtk_slug ),
+									'label'   => Admin_Page_Guard::label(),
+								)
+							),
 						),
 					),
 				),
-			),
-			array(
-				'title' => __( 'Access rules', 'perxel-toolkit' ),
-				'note'  => __( 'Values set via the pxtk_admin_page_guard_* filters still apply and are merged with these.', 'perxel-toolkit' ),
-				'rows'  => Admin_Page_Guard::field_rows(),
-			),
+				array(
+					'title' => __( 'Access rules', 'perxel-toolkit' ),
+					'note'  => __( 'Values set via the pxtk_admin_page_guard_* filters still apply and are merged with these.', 'perxel-toolkit' ),
+					'rows'  => Admin_Page_Guard::field_rows(),
+				),
+			)
 		)
 	);
 	?>
 </form>
 
-<?php
-// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped

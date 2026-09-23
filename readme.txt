@@ -4,7 +4,7 @@ Tags: tag-one, tag-two
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.0.4
+Stable tag: 0.0.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,6 +64,9 @@ posts or media library is left untouched.
 3. Admin Page Guard: restrict selected admin pages to allowed users, with a "view as" preview.
 
 == Changelog ==
+
+= 0.0.5 =
+* Admin screens now escape their output at the point of output with `wp_kses()` (shared UI kit 0.23.0), with no escaping suppressions left. No behaviour change.
 
 = 0.0.4 =
 * Add Disable Comments - turns off commenting site-wide (closed, hidden, not deleted) and strips the related admin UI (menu, dashboard widget, admin bar, list-table column, widget).

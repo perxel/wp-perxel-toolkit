@@ -3,6 +3,10 @@
 All notable changes to this plugin are documented here. This file mirrors the
 `== Changelog ==` section of `readme.txt` (keep the two in sync).
 
+## 0.0.5
+
+* Admin screens now escape their output at the point of output with `wp_kses()` (shared UI kit 0.23.0), with no escaping suppressions left. No behaviour change.
+
 ## 0.0.4
 
 * Add Disable Comments - turns off commenting site-wide (closed, hidden, not deleted) and strips the related admin UI (menu, dashboard widget, admin bar, list-table column, widget).
