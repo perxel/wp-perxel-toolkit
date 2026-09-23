@@ -58,7 +58,9 @@ spl_autoload_register(
  * second copy is inert. We host the kit's component showcase as a hidden
  * maintainer-only screen, so suppress its own Tools page.
  */
-define( 'PERXEL_UI_SHOWCASE_HOSTED', true );
+if ( ! defined( 'PERXEL_UI_SHOWCASE_HOSTED' ) ) {
+	define( 'PERXEL_UI_SHOWCASE_HOSTED', true );
+}
 
 if ( is_readable( PXTK_DIR . '/vendor/perxel-ui/loader.php' ) ) {
 	require_once PXTK_DIR . '/vendor/perxel-ui/loader.php';
