@@ -1,0 +1,13 @@
+/* Featured Posts on the Posts list screen. */
+
+/* The column only carries state for featured-posts.js; it stays hidden. */
+.column-pxtk_featured {
+	width: 150px;
+	display: none;
+}
+
+/* Sticky support is removed: hide Quick Edit's "Make this post sticky". */
+.pxtk-hide-sticky .inline-edit-row input[name="sticky"],
+.pxtk-hide-sticky .inline-edit-row input[name="sticky"] + .checkbox-title {
+	display: none !important;
+}

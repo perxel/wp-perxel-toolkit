@@ -50,7 +50,7 @@ class Featured_Posts extends Module {
 	public function register(): void {
 		if ( self::disable_sticky() ) {
 			remove_post_type_support( 'post', 'sticky' );
-			add_action( 'admin_head-edit.php', array( $this, 'hide_sticky_quick_edit' ) );
+			add_filter( 'admin_body_class', array( $this, 'hide_sticky_body_class' ) );
 		}
 
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
@@ -67,21 +67,27 @@ class Featured_Posts extends Module {
 			}
 		);
 
-		add_action( 'admin_head', array( $this, 'column_width_css' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'pre_get_posts', array( $this, 'sort_by_featured' ) );
 
 		add_action( 'quick_edit_custom_box', array( $this, 'quick_edit_box' ), 10, 2 );
-		add_action( 'admin_footer-edit.php', array( $this, 'quick_edit_script' ) );
 
 		add_filter( 'the_title', array( $this, 'add_star_to_title' ), 10, 2 );
 	}
 
-	public function hide_sticky_quick_edit(): void {
-		global $typenow;
-		if ( 'post' !== $typenow ) {
-			return;
+	/**
+	 * Tag the Posts list screen so assets/css/featured-posts.css hides Quick
+	 * Edit's "Make this post sticky" checkbox (sticky support is removed).
+	 *
+	 * @param string $classes Space-separated admin body classes.
+	 * @return string
+	 */
+	public function hide_sticky_body_class( $classes ) {
+		$screen = get_current_screen();
+		if ( $screen && 'edit' === $screen->base && 'post' === $screen->post_type ) {
+			$classes .= ' pxtk-hide-sticky';
 		}
-		echo '<style>.inline-edit-row input[name="sticky"],.inline-edit-row input[name="sticky"]+.checkbox-title{display:none !important;}</style>';
+		return $classes;
 	}
 
 	public function add_meta_box(): void {
@@ -167,12 +173,30 @@ class Featured_Posts extends Module {
 		echo get_post_meta( $post_id, '_featured', true ) ? '&#11088;' : '&mdash;';
 	}
 
-	public function column_width_css(): void {
-		global $typenow;
-		if ( ! in_array( $typenow, self::supported_post_types(), true ) ) {
+	/**
+	 * Posts list screen only: the column / sticky CSS and the Quick Edit
+	 * script (assets/css|js/featured-posts.*).
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( $hook ): void {
+		$screen = get_current_screen();
+		if ( 'edit.php' !== $hook || ! $screen ) {
 			return;
 		}
-		echo '<style>.column-pxtk_featured{width:150px;display:none;}</style>';
+
+		$supported = in_array( $screen->post_type, self::supported_post_types(), true );
+		if ( ! $supported && ! ( 'post' === $screen->post_type && self::disable_sticky() ) ) {
+			return;
+		}
+
+		$css = PXTK_DIR . '/assets/css/featured-posts.css';
+		wp_enqueue_style( 'pxtk-featured-posts', PXTK_URL . '/assets/css/featured-posts.css', array(), file_exists( $css ) ? (string) filemtime( $css ) : PXTK_VERSION );
+
+		if ( $supported ) {
+			$js = PXTK_DIR . '/assets/js/featured-posts.js';
+			wp_enqueue_script( 'pxtk-featured-posts', PXTK_URL . '/assets/js/featured-posts.js', array( 'jquery', 'inline-edit-post' ), file_exists( $js ) ? (string) filemtime( $js ) : PXTK_VERSION, true );
+		}
 	}
 
 	/**
@@ -214,56 +238,6 @@ class Featured_Posts extends Module {
 				</label>
 			</div>
 		</fieldset>
-		<?php
-	}
-
-	public function quick_edit_script(): void {
-		global $typenow;
-		if ( ! in_array( $typenow, self::supported_post_types(), true ) ) {
-			return;
-		}
-		?>
-		<script>
-			( function ( $ ) {
-				var wpInlineEdit = inlineEditPost.edit;
-
-				inlineEditPost.edit = function ( id ) {
-					wpInlineEdit.apply( this, arguments );
-
-					var postId = 0;
-					if ( typeof id === 'object' ) {
-						postId = parseInt( this.getId( id ), 10 );
-					}
-
-					if ( postId > 0 ) {
-						var $row     = $( '#post-' + postId );
-						var $editRow = $( '#edit-' + postId );
-						var isFeatured = $row.find( '.column-pxtk_featured' ).text().trim() === '⭐';
-						$editRow.find( 'input[name="pxtk_featured_post"]' ).prop( 'checked', isFeatured );
-					}
-				};
-
-				$( document ).ajaxComplete( function ( event, xhr, settings ) {
-					if ( ! settings.data || settings.data.indexOf( 'action=inline-save' ) === -1 ) {
-						return;
-					}
-
-					var match = settings.data.match( /post_ID=(\d+)/ );
-					if ( ! match ) {
-						return;
-					}
-
-					var $row = $( '#post-' + match[1] );
-
-					setTimeout( function () {
-						var $title      = $row.find( '.row-title' );
-						var isFeatured  = $row.find( '.column-pxtk_featured' ).text().trim() === '⭐';
-						var titleText   = $title.text().replace( /\s*⭐\s*$/, '' ).trim();
-						$title.text( isFeatured ? titleText + ' ⭐' : titleText );
-					}, 100 );
-				} );
-			} )( jQuery );
-		</script>
 		<?php
 	}
 
