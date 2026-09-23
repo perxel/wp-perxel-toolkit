@@ -26,12 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Perxel_UI escapes structure; dynamic values escaped inline.
-
 if ( $updated ) {
-	echo \Perxel_UI::notice( 'success', esc_html__( 'Settings saved.', 'perxel-toolkit' ), array( 'dismissible' => true ) );
+	Admin::kit( \Perxel_UI::notice( 'success', esc_html__( 'Settings saved.', 'perxel-toolkit' ), array( 'dismissible' => true ) ) );
 } elseif ( $was_reset ) {
-	echo \Perxel_UI::notice( 'success', esc_html__( 'Settings reset to defaults.', 'perxel-toolkit' ), array( 'dismissible' => true ) );
+	Admin::kit( \Perxel_UI::notice( 'success', esc_html__( 'Settings reset to defaults.', 'perxel-toolkit' ), array( 'dismissible' => true ) ) );
 }
 
 $pxtk_reset_url = wp_nonce_url(
@@ -166,24 +164,25 @@ foreach ( $pxtk_sections as $pxtk_group => $pxtk_section ) {
 	<input type="hidden" name="action" value="pxtk_save_settings" />
 	<?php wp_nonce_field( 'pxtk_save_settings' ); ?>
 
-	<?php echo \Perxel_UI::rows( $pxtk_module_sections ); ?>
+	<?php Admin::kit( \Perxel_UI::rows( $pxtk_module_sections ) ); ?>
 </form>
 
 <?php
-echo \Perxel_UI::rows(
-	array(
+Admin::kit(
+	\Perxel_UI::rows(
 		array(
-			'title'  => __( 'Danger zone', 'perxel-toolkit' ),
-			'danger' => true,
-			'rows'   => array(
-				array(
-					'label'   => __( 'Reset settings', 'perxel-toolkit' ),
-					'sub'     => esc_html__( 'Restore every module toggle on this screen to its default (all enabled).', 'perxel-toolkit' ),
-					'content' => '<a class="button" href="' . esc_url( $pxtk_reset_url ) . '">' . esc_html__( 'Reset', 'perxel-toolkit' ) . '</a>',
+			array(
+				'title'  => __( 'Danger zone', 'perxel-toolkit' ),
+				'danger' => true,
+				'rows'   => array(
+					array(
+						'label'   => __( 'Reset settings', 'perxel-toolkit' ),
+						'sub'     => esc_html__( 'Restore every module toggle on this screen to its default (all enabled).', 'perxel-toolkit' ),
+						'content' => '<a class="button" href="' . esc_url( $pxtk_reset_url ) . '">' . esc_html__( 'Reset', 'perxel-toolkit' ) . '</a>',
+					),
 				),
 			),
-		),
+		)
 	)
 );
 
-// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped

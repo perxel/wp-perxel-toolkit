@@ -160,9 +160,12 @@ The template ships none. When you add them:
   name is the constant `PXTK_NAME` (no rebrand option).
 - **Text domain** `perxel-toolkit` (= the slug). JS i18n via `wp.i18n`
   (`wp_set_script_translations`); script deps include `wp-i18n`.
-- **Escape at output.** Views set
-  `// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped` because the
-  kit escapes structure - every dynamic value is still escaped inline.
+- **Escape late, never suppress `EscapeOutput`.** Views echo kit markup through
+  `Admin::kit( \Perxel_UI::rows( ... ) )`, which is
+  `echo wp_kses( $html, \Perxel_UI::allowed_html() )`; every dynamic value
+  handed to the kit is still escaped inline. Other built HTML gets its own
+  `wp_kses()` with a narrow allowlist. No inline `on*` handlers in kit markup
+  (kses strips them) - wire them in JS.
 - Admin screens render inside `Perxel_UI_Layout::open()/close()` via
   `Admin::screen()`, which falls back to a plain notice if the kit is not
   vendored. Use the kit components (`rows()`, `notice()`, `toggle()`, `code()`,
@@ -196,7 +199,7 @@ page is suppressed.
 
 ```bash
 php -l <changed files>
-composer run lint          # phpcs - must stay green
+composer run lint          # check-suppressions.sh + phpcs - must stay green
 composer run build         # bin/build-zip.sh - installable zip in dist/
 ```
 
@@ -221,7 +224,9 @@ Rules that are not obvious and cost real time when re-derived per plugin:
 | Prefix any variable you **assign** in a view (`$pxtk_url`); vars passed in via `extract()` are fine | `NonPrefixedVariableFound` fires on template-scope assignments |
 | `set_time_limit()` etc.: `function_exists()` guard + inline `// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- <reason>` | discouraged-function warning |
 | Calling another plugin's hooks (WPML `wpml_*`, WooCommerce): scope a `phpcs.xml.dist` exclude to the wrapper file **and** add the code to `lint.yml` -> `ignore-codes` | `NonPrefixedHooknameFound`; the two tools don't share config |
-| `'suppress_filters' => true` in a query: same dual-suppression, code `WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters` | deliberate but flagged |
+| Escape late: kit markup through `Admin::kit()` (`wp_kses` + `Perxel_UI::allowed_html()`), never a file-wide `phpcs:disable` nor a per-line `phpcs:ignore` on an `EscapeOutput` echo | WordPress.org review flagged both forms in perxel-ai-translate (2026-09-22, 2026-09-23); `bin/check-suppressions.sh` (run by `composer run lint`) fails on them |
+| No `'suppress_filters' => true` (Plugin Check **error**); `get_posts()` already defaults to it | error-level `WordPressVIPMinimum...SuppressFilters_suppress_filters` |
+| A MySQL `GET_LOCK` result must be checked; skip the guarded work when it isn't `1` | reviewer flagged an ignored lock result as a race condition |
 
 The split that bites: **Plugin Check runs its own ruleset, not `phpcs.xml.dist`.**
 Any suppression for a documented false positive goes in *both* places -

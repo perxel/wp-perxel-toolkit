@@ -238,10 +238,13 @@ class Acf extends Module {
 			<div class="notice notice-info">
 				<p>
 					<?php
-					printf(
-						/* translators: %s: relative file path. */
-						esc_html__( 'JSON file at %s. Edit here or directly in the file - sync from the ACF admin after manual edits.', 'perxel-toolkit' ),
-						'<code>' . esc_html( $relative_path ) . '</code>'
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: relative file path. */
+							esc_html__( 'JSON file at %s. Edit here or directly in the file - sync from the ACF admin after manual edits.', 'perxel-toolkit' ),
+							'<code>' . esc_html( $relative_path ) . '</code>'
+						),
+						array( 'code' => array() )
 					);
 					?>
 				</p>
@@ -252,10 +255,13 @@ class Acf extends Module {
 			<div class="notice notice-warning">
 				<p>
 					<?php
-					printf(
-						/* translators: %s: relative file path. */
-						esc_html__( 'No JSON file yet. Save this field group to create %s.', 'perxel-toolkit' ),
-						'<code>' . esc_html( $relative_path ) . '</code>'
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: relative file path. */
+							esc_html__( 'No JSON file yet. Save this field group to create %s.', 'perxel-toolkit' ),
+							'<code>' . esc_html( $relative_path ) . '</code>'
+						),
+						array( 'code' => array() )
 					);
 					?>
 				</p>

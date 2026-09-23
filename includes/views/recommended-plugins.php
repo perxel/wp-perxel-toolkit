@@ -9,17 +9,18 @@
  * @package Perxel_Toolkit
  */
 
+use Perxel_Toolkit\Admin;
 use Perxel_Toolkit\Recommended_Plugins;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Perxel_UI escapes structure; dynamic values escaped inline.
-
-echo \Perxel_UI::notice(
-	'info',
-	esc_html__( "These are plugins Perxel recommends for every project - they're not part of this toolkit. Free/wordpress.org plugins install directly below; others open the vendor's page.", 'perxel-toolkit' )
+Admin::kit(
+	\Perxel_UI::notice(
+		'info',
+		esc_html__( "These are plugins Perxel recommends for every project - they're not part of this toolkit. Free/wordpress.org plugins install directly below; others open the vendor's page.", 'perxel-toolkit' )
+	)
 );
 
 $pxtk_recommended_groups = array();
@@ -42,6 +43,4 @@ foreach ( $pxtk_recommended_groups as $pxtk_group_title => $pxtk_group_rows ) {
 	);
 }
 
-echo \Perxel_UI::rows( $pxtk_recommended_sections );
-
-// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+Admin::kit( \Perxel_UI::rows( $pxtk_recommended_sections ) );

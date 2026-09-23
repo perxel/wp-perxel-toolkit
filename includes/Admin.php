@@ -27,6 +27,16 @@ class Admin {
 	const PAGE_RECOMMENDED_PLUGINS = 'pxtk-recommended-plugins';
 	const PAGE_UI                  = 'pxtk-ui';
 
+	/**
+	 * Echo markup returned by a Perxel_UI renderer, escaped late through the
+	 * kit's own wp_kses() allowlist.
+	 *
+	 * @param string $html Markup from a Perxel_UI:: renderer.
+	 */
+	public static function kit( $html ) {
+		echo wp_kses( $html, \Perxel_UI::allowed_html() );
+	}
+
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'assets' ) );
@@ -258,13 +268,11 @@ class Admin {
 	 * ------------------------------------------------------------------- */
 
 	public function render_settings() {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- display-only flash flags set by our own redirect.
 		$vars = array(
 			'settings'  => Settings::all(),
-			'updated'   => isset( $_GET['updated'] ),
-			'was_reset' => isset( $_GET['reset'] ),
+			'updated'   => isset( $_GET['updated'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only flash flag set by our own redirect.
+			'was_reset' => isset( $_GET['reset'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only flash flag set by our own redirect.
 		);
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$save = get_submit_button(
 			__( 'Save settings', 'perxel-toolkit' ),
@@ -284,11 +292,9 @@ class Admin {
 	}
 
 	public function render_admin_page_guard() {
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- display-only flash flag set by our own redirect.
 		$vars = array(
-			'updated' => isset( $_GET['updated'] ),
+			'updated' => isset( $_GET['updated'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only flash flag set by our own redirect.
 		);
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$save = get_submit_button(
 			__( 'Save changes', 'perxel-toolkit' ),
