@@ -3,7 +3,7 @@
 All notable changes to this plugin are documented here. This file mirrors the
 `== Changelog ==` section of `readme.txt` (keep the two in sync).
 
-## Unreleased
+## 0.0.7
 
 * Every module is now off by default on a fresh install; existing sites keep their saved on/off state.
 * Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.

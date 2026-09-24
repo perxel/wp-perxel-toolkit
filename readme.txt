@@ -4,7 +4,7 @@ Tags: admin, block editor, featured image, disable comments, image sizes
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.0.6
+Stable tag: 0.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -91,6 +91,13 @@ posts or media library, such as the Featured Posts flag, is left untouched.
 3. Admin Page Guard: restrict selected admin pages to allowed users, with a "view as" preview.
 
 == Changelog ==
+
+= 0.0.7 =
+* Every module is now off by default on a fresh install; existing sites keep their saved on/off state.
+* Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.
+* Settings forms read only their own fields from the request instead of the whole `$_POST`.
+* ACF/SCF: the field-group data used to pick a save path is sanitised on read.
+* The hidden UI-kit showcase is now opt-in with `define( 'PXTK_UI_SHOWCASE', true );` instead of a hard-coded user check.
 
 = 0.0.6 =
 * Featured Posts: the Posts list CSS and Quick Edit script now load as enqueued files instead of inline `<style>` / `<script>` tags. No behaviour change.
