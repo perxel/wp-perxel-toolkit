@@ -140,6 +140,11 @@ class Featured_Posts extends Module {
 	 * @param int $post_id Post ID.
 	 */
 	private function save_quick_edit( $post_id ): void {
+		// Quick Edit saves every post type through the same request; only
+		// the types that show the Featured box may write the flag.
+		if ( ! in_array( get_post_type( $post_id ), self::supported_post_types(), true ) ) {
+			return;
+		}
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
 		}

@@ -9,6 +9,8 @@ All notable changes to this plugin are documented here. This file mirrors the
 * Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.
 * Settings forms read only their own fields from the request instead of the whole `$_POST`.
 * ACF/SCF: the field-group data used to pick a save path is sanitised on read.
+* Featured Posts: Quick Edit no longer writes the `_featured` flag on post types that don't use it (pages, products, ...).
+* Nectar Blocks: core blocks are only hidden in the post editor, not in the Site Editor or widget editors, where block themes need them.
 
 ## 0.0.6
 

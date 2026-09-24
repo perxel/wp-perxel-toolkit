@@ -55,14 +55,22 @@ class Nectarblocks extends Module {
 	}
 
 	public function register(): void {
-		add_filter( 'allowed_block_types_all', array( $this, 'filter_allowed_blocks' ) );
+		add_filter( 'allowed_block_types_all', array( $this, 'filter_allowed_blocks' ), 10, 2 );
 	}
 
 	/**
-	 * @param bool|array $allowed_block_types Currently allowed block types.
-	 * @return array
+	 * @param bool|array                    $allowed_block_types  Currently allowed block types.
+	 * @param \WP_Block_Editor_Context|null $block_editor_context Editor being loaded.
+	 * @return bool|array
 	 */
-	public function filter_allowed_blocks( $allowed_block_types ) {
+	public function filter_allowed_blocks( $allowed_block_types, $block_editor_context = null ) {
+		// Post editing only. The Site Editor and the widget editors are
+		// built from core blocks (template parts, post content, navigation);
+		// hiding those would break a block theme's templates.
+		if ( ! $block_editor_context || empty( $block_editor_context->post ) ) {
+			return $allowed_block_types;
+		}
+
 		/**
 		 * Core block names to keep even though this module hides `core/*`
 		 * by default, e.g. `array( 'core/quote', 'core/list' )` for a blog.

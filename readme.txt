@@ -74,7 +74,9 @@ restricts nothing, so it can never lock every administrator out.
 
 = Does Media Sizes regenerate my existing images? =
 
-No. It changes the sizes generated for new uploads and updates the Settings ->
+No. While it is on it owns the Settings -> Media image sizes (changes made
+there are overwritten) and removes sizes other plugins register, such as
+WooCommerce's - use the `pxtk_media_sizes_keep` filter to keep one. It changes the sizes generated for new uploads and updates the Settings ->
 Media values for the core sizes (thumbnail, medium, medium_large, large). Use a thumbnail
 regeneration plugin to rebuild existing images. Turning the module off does
 not restore the previous Settings -> Media values.
@@ -97,6 +99,8 @@ posts or media library, such as the Featured Posts flag, is left untouched.
 * Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.
 * Settings forms read only their own fields from the request instead of the whole `$_POST`.
 * ACF/SCF: the field-group data used to pick a save path is sanitised on read.
+* Featured Posts: Quick Edit no longer writes the `_featured` flag on post types that don't use it (pages, products, ...).
+* Nectar Blocks: core blocks are only hidden in the post editor, not in the Site Editor or widget editors, where block themes need them.
 
 = 0.0.6 =
 * Featured Posts: the Posts list CSS and Quick Edit script now load as enqueued files instead of inline `<style>` / `<script>` tags. No behaviour change.
