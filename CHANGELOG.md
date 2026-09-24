@@ -9,7 +9,6 @@ All notable changes to this plugin are documented here. This file mirrors the
 * Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.
 * Settings forms read only their own fields from the request instead of the whole `$_POST`.
 * ACF/SCF: the field-group data used to pick a save path is sanitised on read.
-* The hidden UI-kit showcase is now opt-in with `define( 'PXTK_UI_SHOWCASE', true );` instead of a hard-coded user check.
 
 ## 0.0.6
 

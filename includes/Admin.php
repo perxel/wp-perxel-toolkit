@@ -121,17 +121,17 @@ class Admin {
 	}
 
 	/**
-	 * Whether the current user may see the bundled UI-kit showcase - an
-	 * administrator on a dev site that opts in with
-	 * `define( 'PXTK_UI_SHOWCASE', true );` in wp-config.php, and only in a
-	 * build that still ships showcase/ (the release zip strips it).
+	 * Whether the current user may see the bundled UI-kit showcase - the
+	 * maintainer only, and only in a build that still ships showcase/.
 	 *
 	 * @return bool
 	 */
 	public static function can_see_showcase() {
-		return defined( 'PXTK_UI_SHOWCASE' ) && PXTK_UI_SHOWCASE
-			&& current_user_can( 'manage_options' )
-			&& class_exists( 'Perxel_UI_Showcase' );
+		if ( ! current_user_can( 'manage_options' ) || ! class_exists( 'Perxel_UI_Showcase' ) ) {
+			return false;
+		}
+		$user = wp_get_current_user();
+		return $user && ( 'phucbm' === $user->user_login || 'phucbm.dev@gmail.com' === strtolower( (string) $user->user_email ) );
 	}
 
 	/*

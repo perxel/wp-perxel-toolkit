@@ -213,9 +213,7 @@ you run `bin/update-ui.sh`.
 
 We host the kit's component showcase as a hidden maintainer-only screen
 (`PERXEL_UI_SHOWCASE_HOSTED` + `Admin::can_see_showcase()`), so its own Tools
-page is suppressed. It is opt-in per site with
-`define( 'PXTK_UI_SHOWCASE', true );` in `wp-config.php` - no hard-coded user
-check - and the release zip strips `showcase/` anyway.
+page is suppressed.
 
 ## Before committing
 
