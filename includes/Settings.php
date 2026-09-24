@@ -16,15 +16,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Settings {
 
 	/**
-	 * Every module starts off: a fresh install changes nothing until the
-	 * site owner turns a module on.
+	 * Every module starts on: the toolkit is installed on Perxel client
+	 * sites that want the full set (see CLAUDE.md -> "Modules").
 	 *
-	 * @return array<string,bool> Every registered module's slug => false.
+	 * @return array<string,bool> Every registered module's slug => true.
 	 */
 	public static function default_modules(): array {
 		$defaults = array();
 		foreach ( Registry::all() as $module ) {
-			$defaults[ $module::slug() ] = false;
+			$defaults[ $module::slug() ] = true;
 		}
 		return $defaults;
 	}

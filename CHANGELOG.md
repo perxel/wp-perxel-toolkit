@@ -5,8 +5,7 @@ All notable changes to this plugin are documented here. This file mirrors the
 
 ## 0.0.7
 
-* Every module is now off by default on a fresh install; existing sites keep their saved on/off state.
-* Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.
+* Admin Page Guard: if the allowed-users list is emptied, the guard now restricts nothing instead of locking every user, administrators included, out of the restricted pages.
 * Settings forms read only their own fields from the request instead of the whole `$_POST`.
 * ACF/SCF: the field-group data used to pick a save path is sanitised on read.
 * Featured Posts: Quick Edit no longer writes the `_featured` flag on post types that don't use it (pages, products, ...).

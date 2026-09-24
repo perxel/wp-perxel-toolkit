@@ -16,9 +16,9 @@ Perxel Toolkit bundles a set of small admin and block-editor features that
 many sites end up adding by hand, plus a few integrations for popular plugins,
 behind one settings screen at **Tools -> Perxel Toolkit**.
 
-Every module is **off after activation**. Nothing on your site changes until
-you switch a module on, and switching it off again stops it (Media Sizes
-leaves its Settings -> Media values in place - see the FAQ).
+Every module is **on after activation**; switch off the ones you don't want.
+Switching a module off stops it (Media Sizes leaves its Settings -> Media
+values in place - see the FAQ).
 
 **Features**
 
@@ -60,7 +60,8 @@ This plugin does not connect to any external services.
 
 = Does activating the plugin change my site? =
 
-No. Every module starts off. Each one only takes effect while it is switched on.
+Yes. Every module starts on, so review Tools -> Perxel Toolkit right after
+activating and switch off what you don't need.
 
 = Why is an integration missing from the settings screen? =
 
@@ -69,7 +70,7 @@ Recommended Plugins screen lists every supported plugin.
 
 = Admin Page Guard is on but nothing is restricted. =
 
-Add at least one user to "Allowed users". While that list is empty the guard
+Add at least one user to "Allowed users". If you empty that list the guard
 restricts nothing, so it can never lock every administrator out.
 
 = Does Media Sizes regenerate my existing images? =
@@ -95,8 +96,7 @@ posts or media library, such as the Featured Posts flag, is left untouched.
 == Changelog ==
 
 = 0.0.7 =
-* Every module is now off by default on a fresh install; existing sites keep their saved on/off state.
-* Admin Page Guard: no default allowed user, and the guard restricts nothing while the allowed-users list is empty, so it can never lock every administrator out.
+* Admin Page Guard: if the allowed-users list is emptied, the guard now restricts nothing instead of locking every user, administrators included, out of the restricted pages.
 * Settings forms read only their own fields from the request instead of the whole `$_POST`.
 * ACF/SCF: the field-group data used to pick a save path is sanitised on read.
 * Featured Posts: Quick Edit no longer writes the `_featured` flag on post types that don't use it (pages, products, ...).

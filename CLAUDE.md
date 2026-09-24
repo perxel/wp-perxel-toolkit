@@ -115,12 +115,16 @@ class extending `Modules\Module`, listed in `Modules\Registry::MODULES`.
 - **Security module** (`group()` returns `'security'`) - restricts or gates
   wp-admin access, shown under "Access Control". E.g. `Admin_Page_Guard`.
 
-Every module defaults to **off** (`Settings::default_modules()`): a fresh
-install changes nothing until the site owner opts in. Keep it that way for new
-modules - this is a public plugin, and a module that changes site behaviour on
-activation is a support (and review) problem. Likewise never ship a default
-that names a specific user (Admin Page Guard's allow-list starts empty and the
-guard is inert while it is).
+**Defaults are for Perxel client sites, on purpose.** Every module defaults
+to **on** (`Settings::default_modules()`), and Admin Page Guard's allowed
+users default to `phucbm`, so on a client site the maintainer keeps access and
+the client's admins are kept out of Plugins, Nectar Blocks, ACF field groups
+and Akeeba. 0.0.7 briefly switched both to "off / nobody" while preparing a
+WordPress.org submission; that was reverted when the submission was dropped
+(2026-09-24). Don't change these defaults again unless the plugin goes to
+WordPress.org - on a stranger's site they would lock admins out of Plugins.
+The guard does restrict nothing if its allow-list is emptied (`is_active()`),
+so emptying it can never lock everyone out.
 
 **Adding a module:** add `includes/Modules/<Name>.php` extending
 `Modules\Module` (`slug()`, `label()`, `description()`, `group()`, `register()`;

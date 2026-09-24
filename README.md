@@ -4,7 +4,7 @@
 
 Small admin and block-editor features plus integrations for popular plugins,
 behind one settings screen at **Tools -> Perxel Toolkit**. Every module is
-**off after activation** - nothing on the site changes until you switch one on.
+**on after activation** - switch off the ones a site doesn't need.
 
 **Features**
 
@@ -24,7 +24,7 @@ behind one settings screen at **Tools -> Perxel Toolkit**. Every module is
 
 - **Admin Page Guard** - hide selected admin pages from the menu and redirect
   everyone except the users you allow, with a "View as not-allowed user"
-  preview. Restricts nothing while the allowed-users list is empty.
+  preview. Restricts nothing if the allowed-users list is emptied.
 
 **Integrations** (listed once the plugin they extend is active)
 

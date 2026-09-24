@@ -58,7 +58,7 @@ class Admin_Page_Guard extends Module {
 				'type'    => 'users',
 				'label'   => __( 'Allowed users', 'perxel-toolkit' ),
 				'desc'    => __( 'Only these users can open the restricted pages. While the list is empty the guard restricts nothing.', 'perxel-toolkit' ),
-				'default' => array(),
+				'default' => array( 'phucbm' ),
 			),
 			array(
 				'key'     => 'default_restricted_pages',
