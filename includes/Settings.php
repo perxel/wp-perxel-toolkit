@@ -16,6 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Settings {
 
 	/**
+	 * Every module starts on: the toolkit is installed on Perxel client
+	 * sites that want the full set (see CLAUDE.md -> "Modules").
+	 *
 	 * @return array<string,bool> Every registered module's slug => true.
 	 */
 	public static function default_modules(): array {

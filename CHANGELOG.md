@@ -3,6 +3,14 @@
 All notable changes to this plugin are documented here. This file mirrors the
 `== Changelog ==` section of `readme.txt` (keep the two in sync).
 
+## 0.0.7
+
+* Admin Page Guard: if the allowed-users list is emptied, the guard now restricts nothing instead of locking every user, administrators included, out of the restricted pages.
+* Settings forms read only their own fields from the request instead of the whole `$_POST`.
+* ACF/SCF: the field-group data used to pick a save path is sanitised on read.
+* Featured Posts: Quick Edit no longer writes the `_featured` flag on post types that don't use it (pages, products, ...).
+* Nectar Blocks: core blocks are only hidden in the post editor, not in the Site Editor or widget editors, where block themes need them.
+
 ## 0.0.6
 
 * Featured Posts: the Posts list CSS and Quick Edit script now load as enqueued files instead of inline `<style>` / `<script>` tags. No behaviour change.

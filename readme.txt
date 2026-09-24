@@ -1,42 +1,52 @@
 === Perxel Toolkit ===
 Contributors: phucbm
-Tags: tag-one, tag-two
+Tags: admin, block editor, featured image, disable comments, image sizes
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.0.6
+Stable tag: 0.0.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Toggleable admin/editor features and third-party plugin integrations shared across Perxel projects.
+Small admin and block-editor features plus integrations for popular plugins - each one off until you turn it on.
 
 == Description ==
 
-Perxel Toolkit bundles the small admin/editor features and plugin
-integrations we re-add on every project (editor restrictions, admin page
-guarding, featured images/posts, Gravity Forms and ACF/SCF tweaks, Nectar
-Blocks visibility) into one plugin with a single settings screen, so updating
-them across client sites is a plugin update instead of a file diff.
+Perxel Toolkit bundles a set of small admin and block-editor features that
+many sites end up adding by hand, plus a few integrations for popular plugins,
+behind one settings screen at **Tools -> Perxel Toolkit**.
 
-**Key features**
+Every module is **on after activation**; switch off the ones you don't want.
+Switching a module off stops it (Media Sizes leaves its Settings -> Media
+values in place - see the FAQ).
 
-* Editor Restrictions - lock down block-editor capabilities for non-admin roles
-* Admin Page Guard - restrict selected admin pages to allowed users
-* Featured Image Column - featured-image column with quick-edit on the post list
-* Featured Posts - a featured checkbox on posts with native query support
-* Disable Comments - turn off commenting site-wide and hide the related admin UI
-* Media Sizes - a larger default image-size ladder, with every other size (core's extras, plugins', theme's) removed
-* Gravity Forms integration - run multiple instances of the same form per page
-* ACF/SCF integration - route field-group JSON to per-block/per-location paths
-* Nectar Blocks integration - hide default core blocks when Nectar Blocks is active
+**Features**
+
+* Editor Restrictions - hide block locking, the code editor and unfiltered HTML in the block editor for the roles you choose (administrators are never restricted)
+* Featured Image Column - a featured-image column on the post list; click it to set or change the image
+* Featured Posts - a "Featured" checkbox on posts (edit screen and Quick Edit), stored as post meta you can query
+* Disable Comments - close and hide comments site-wide and remove the related admin UI (existing comments are kept, not deleted)
+* Media Sizes - a larger default image-size ladder, with every other registered size removed
+
+**Access control**
+
+* Admin Page Guard - hide selected admin pages from the menu and redirect everyone except the users you allow, with a "View as not-allowed user" preview
+
+**Integrations** (listed once the plugin they extend is active)
+
+* Gravity Forms - render the same form more than once on a page
+* Advanced Custom Fields / Secure Custom Fields - save field-group JSON next to each block, or to per-location files in the theme
+* Nectar Blocks - hide the default core blocks from the inserter
+
+A **Recommended Plugins** screen lists plugins that pair well with the
+toolkit, with WordPress's own install button for those hosted on
+WordPress.org and a plain link for the rest. Nothing is installed unless you
+click install.
+
+Developers can fine-tune most modules through `pxtk_*` filters documented in
+the source.
 
 == External services ==
-
-<!--
-Delete this whole section if the plugin does not contact any third-party
-service. If it does, WordPress.org requires you to list every service, what
-data is sent, when, and links to that service's terms and privacy policy.
--->
 
 This plugin does not connect to any external services.
 
@@ -44,18 +54,38 @@ This plugin does not connect to any external services.
 
 1. Upload the plugin to `/wp-content/plugins/perxel-toolkit`, or install it from the Plugins screen.
 2. Activate it.
-3. Go to **Tools -> Perxel Toolkit** to configure it.
+3. Go to **Tools -> Perxel Toolkit** and turn on the modules you want.
 
 == Frequently Asked Questions ==
 
-= A question people actually ask? =
+= Does activating the plugin change my site? =
 
-The answer.
+Yes. Every module starts on, so review Tools -> Perxel Toolkit right after
+activating and switch off what you don't need.
+
+= Why is an integration missing from the settings screen? =
+
+An integration only appears once the plugin it extends is active. The
+Recommended Plugins screen lists every supported plugin.
+
+= Admin Page Guard is on but nothing is restricted. =
+
+Add at least one user to "Allowed users". If you empty that list the guard
+restricts nothing, so it can never lock every administrator out.
+
+= Does Media Sizes regenerate my existing images? =
+
+No. While it is on it owns the Settings -> Media image sizes (changes made
+there are overwritten) and removes sizes other plugins register, such as
+WooCommerce's - use the `pxtk_media_sizes_keep` filter to keep one. It changes the sizes generated for new uploads and updates the Settings ->
+Media values for the core sizes (thumbnail, medium, medium_large, large). Use a thumbnail
+regeneration plugin to rebuild existing images. Turning the module off does
+not restore the previous Settings -> Media values.
 
 = What happens to my data if I delete the plugin? =
 
 Deleting the plugin removes its settings option. Content it created in your
-posts or media library is left untouched.
+posts or media library, such as the Featured Posts flag, is left untouched.
 
 == Screenshots ==
 
@@ -64,6 +94,13 @@ posts or media library is left untouched.
 3. Admin Page Guard: restrict selected admin pages to allowed users, with a "view as" preview.
 
 == Changelog ==
+
+= 0.0.7 =
+* Admin Page Guard: if the allowed-users list is emptied, the guard now restricts nothing instead of locking every user, administrators included, out of the restricted pages.
+* Settings forms read only their own fields from the request instead of the whole `$_POST`.
+* ACF/SCF: the field-group data used to pick a save path is sanitised on read.
+* Featured Posts: Quick Edit no longer writes the `_featured` flag on post types that don't use it (pages, products, ...).
+* Nectar Blocks: core blocks are only hidden in the post editor, not in the Site Editor or widget editors, where block themes need them.
 
 = 0.0.6 =
 * Featured Posts: the Posts list CSS and Quick Edit script now load as enqueued files instead of inline `<style>` / `<script>` tags. No behaviour change.
