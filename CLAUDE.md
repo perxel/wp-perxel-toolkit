@@ -5,9 +5,17 @@ document (see "Documentation rules" below).
 
 ## What this is
 
-`perxel-toolkit` - a **public** WordPress plugin (repo
-`github.com/perxel/wp-perxel-toolkit`, WordPress.org slug `perxel-toolkit`,
-published under the `phucbm` .org account, branded Perxel).
+`perxel-toolkit` - a WordPress plugin for Perxel's client sites (repo
+`github.com/perxel/wp-perxel-toolkit`, branded Perxel). Installed from the zip
+attached to each GitHub Release.
+
+**Not submitted to WordPress.org** (decided 2026-09-24). 0.0.7 was prepared
+and passed Plugin Check, but the toolkit keeps Perxel-specific modules that
+won't be dropped for a public listing (e.g. the Gravity Forms fork below). The
+repo keeps the starter's .org tooling (`readme.txt`, `.wordpress-org/`, Plugin
+Check in CI, the `deploy` job) in case that changes. Leave `DEPLOY_TO_WPORG`
+unset, and don't propose .org submission steps unless the maintainer brings it
+back up.
 
 It was scaffolded from
 [`perxel/wp-plugin-starter`](https://github.com/perxel/wp-plugin-starter) and
@@ -98,6 +106,12 @@ class extending `Modules\Module`, listed in `Modules\Registry::MODULES`.
   unavailable integration is left off the settings screen entirely, and the
   Recommended Plugins screen (`Recommended_Plugins`) lists every supported
   plugin with its install action. E.g. `Gravity_Forms`, `Acf`, `Nectarblocks`.
+- **`Gravity_Forms` is a deliberate fork.** It is a modified copy of the
+  wordpress.org add-on "Multiple Form Instances Add-on for Gravity Forms"
+  (`multiple-gf-form-on-single-page`, by Nikunj). That add-on does not work,
+  which is why it was forked. Keep the module: don't remove it, split it out,
+  or point users to the .org add-on instead. It rewrites Gravity Forms'
+  rendered HTML by find-and-replace, so re-test it after Gravity Forms updates.
 - **Security module** (`group()` returns `'security'`) - restricts or gates
   wp-admin access, shown under "Access Control". E.g. `Admin_Page_Guard`.
 
