@@ -74,7 +74,7 @@ class Acf extends Module {
 	private function block_slug( $value ): string {
 		$slug  = str_replace( 'acf/', '', $value );
 		$parts = explode( '/', $slug );
-		return end( $parts );
+		return sanitize_title( (string) end( $parts ) );
 	}
 
 	/**
@@ -130,8 +130,8 @@ class Acf extends Module {
 			return $path;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ACF handles the field-group save nonce; this is ACF's own field-group array, only used to pick a filesystem save path (block_slug(), shared_filename()) that's then checked with is_dir()/sanitize_title() before use.
-		$field_group = wp_unslash( $_POST['acf_field_group'] );
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- ACF handles the field-group save nonce; only reading location rules, key and title to pick a save path.
+		$field_group = map_deep( wp_unslash( (array) $_POST['acf_field_group'] ), 'sanitize_text_field' );
 
 		foreach ( ( $field_group['location'] ?? array() ) as $group ) {
 			foreach ( $group as $rule ) {

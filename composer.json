@@ -1,6 +1,6 @@
 {
 	"name": "perxel/perxel-toolkit",
-	"description": "Toggleable admin/editor features and third-party plugin integrations shared across Perxel projects.",
+	"description": "Small admin and block-editor features plus integrations for popular plugins - each one off until you turn it on.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"require": {

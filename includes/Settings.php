@@ -16,12 +16,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Settings {
 
 	/**
-	 * @return array<string,bool> Every registered module's slug => true.
+	 * Every module starts off: a fresh install changes nothing until the
+	 * site owner turns a module on.
+	 *
+	 * @return array<string,bool> Every registered module's slug => false.
 	 */
 	public static function default_modules(): array {
 		$defaults = array();
 		foreach ( Registry::all() as $module ) {
-			$defaults[ $module::slug() ] = true;
+			$defaults[ $module::slug() ] = false;
 		}
 		return $defaults;
 	}

@@ -177,7 +177,7 @@ Admin::kit(
 				'rows'   => array(
 					array(
 						'label'   => __( 'Reset settings', 'perxel-toolkit' ),
-						'sub'     => esc_html__( 'Restore every module toggle on this screen to its default (all enabled).', 'perxel-toolkit' ),
+						'sub'     => esc_html__( 'Restore every module toggle on this screen to its default (all off).', 'perxel-toolkit' ),
 						'content' => '<a class="button" href="' . esc_url( $pxtk_reset_url ) . '">' . esc_html__( 'Reset', 'perxel-toolkit' ) . '</a>',
 					),
 				),

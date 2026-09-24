@@ -29,7 +29,9 @@ class Admin {
 
 	/**
 	 * Echo markup returned by a Perxel_UI renderer, escaped late through the
-	 * kit's own wp_kses() allowlist.
+	 * kit's own wp_kses() allowlist. Never echo kit markup any other way, and
+	 * never suppress EscapeOutput (WordPress.org review rejects both a
+	 * file-wide disable and a per-line "escaped earlier" ignore).
 	 *
 	 * @param string $html Markup from a Perxel_UI:: renderer.
 	 */
@@ -119,17 +121,17 @@ class Admin {
 	}
 
 	/**
-	 * Whether the current user may see the bundled UI-kit showcase - the
-	 * maintainer only, and only in a build that still ships showcase/.
+	 * Whether the current user may see the bundled UI-kit showcase - an
+	 * administrator on a dev site that opts in with
+	 * `define( 'PXTK_UI_SHOWCASE', true );` in wp-config.php, and only in a
+	 * build that still ships showcase/ (the release zip strips it).
 	 *
 	 * @return bool
 	 */
 	public static function can_see_showcase() {
-		if ( ! current_user_can( 'manage_options' ) || ! class_exists( 'Perxel_UI_Showcase' ) ) {
-			return false;
-		}
-		$user = wp_get_current_user();
-		return $user && ( 'phucbm' === $user->user_login || 'phucbm.dev@gmail.com' === strtolower( (string) $user->user_email ) );
+		return defined( 'PXTK_UI_SHOWCASE' ) && PXTK_UI_SHOWCASE
+			&& current_user_can( 'manage_options' )
+			&& class_exists( 'Perxel_UI_Showcase' );
 	}
 
 	/*
@@ -345,15 +347,44 @@ class Admin {
 	 * Handlers
 	 * ------------------------------------------------------------------- */
 
+	/**
+	 * The two settings arrays a settings form posts - never the whole
+	 * $_POST. Call only after the handler's nonce check.
+	 *
+	 * @return array{modules:array<string,string>,module_settings:array}
+	 */
+	private static function posted_settings(): array {
+		$modules = array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- each caller runs check_admin_referer() first.
+		if ( isset( $_POST['modules'] ) && is_array( $_POST['modules'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- each caller runs check_admin_referer() first.
+			$modules = map_deep( wp_unslash( $_POST['modules'] ), 'sanitize_key' );
+		}
+
+		// Field values are sanitised per field type in
+		// Settings::sanitize_module_fields() - a generic text sanitiser here
+		// would strip the percent-encoded octets a restricted-page URL can
+		// legitimately contain (e.g. "%2F").
+		$module_settings = array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- each caller runs check_admin_referer() first.
+		if ( isset( $_POST['module_settings'] ) && is_array( $_POST['module_settings'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce checked by the caller; sanitised per field type, see above.
+			$module_settings = wp_unslash( $_POST['module_settings'] );
+		}
+
+		return array(
+			'modules'         => $modules,
+			'module_settings' => $module_settings,
+		);
+	}
+
 	public function handle_save_settings() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You are not allowed to do this.', 'perxel-toolkit' ) );
 		}
 		check_admin_referer( 'pxtk_save_settings' );
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked above; sanitised in Settings::sanitize().
-		$raw = wp_unslash( $_POST );
-		Settings::update( Settings::sanitize( is_array( $raw ) ? $raw : array() ) );
+		Settings::update( Settings::sanitize( self::posted_settings() ) );
 
 		wp_safe_redirect(
 			add_query_arg(
@@ -373,8 +404,7 @@ class Admin {
 		}
 		check_admin_referer( 'pxtk_save_admin_page_guard' );
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked above; sanitised in Settings::sanitize_module_fields().
-		$raw    = wp_unslash( $_POST );
+		$raw    = self::posted_settings();
 		$slug   = Admin_Page_Guard::slug();
 		$values = isset( $raw['module_settings'][ $slug ] ) && is_array( $raw['module_settings'][ $slug ] ) ? $raw['module_settings'][ $slug ] : array();
 

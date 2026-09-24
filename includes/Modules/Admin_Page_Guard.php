@@ -57,7 +57,8 @@ class Admin_Page_Guard extends Module {
 				'key'     => 'allowed_users',
 				'type'    => 'users',
 				'label'   => __( 'Allowed users', 'perxel-toolkit' ),
-				'default' => array( 'phucbm' ),
+				'desc'    => __( 'Only these users can open the restricted pages. While the list is empty the guard restricts nothing.', 'perxel-toolkit' ),
+				'default' => array(),
 			),
 			array(
 				'key'     => 'default_restricted_pages',
@@ -152,7 +153,7 @@ class Admin_Page_Guard extends Module {
 	}
 
 	public function hide_menus(): void {
-		if ( $this->current_user_is_allowed() ) {
+		if ( ! $this->is_active() || $this->current_user_is_allowed() ) {
 			return;
 		}
 
@@ -165,7 +166,7 @@ class Admin_Page_Guard extends Module {
 	}
 
 	public function guard(): void {
-		if ( $this->current_user_is_allowed() ) {
+		if ( ! $this->is_active() || $this->current_user_is_allowed() ) {
 			return;
 		}
 
@@ -198,6 +199,15 @@ class Admin_Page_Guard extends Module {
 				exit;
 			}
 		}
+	}
+
+	/**
+	 * With nobody on the allow-list, restricting would lock every user -
+	 * the site owner included - out of the listed pages, so do nothing
+	 * until at least one user is allowed.
+	 */
+	private function is_active(): bool {
+		return (bool) self::allowed_users();
 	}
 
 	private function current_user_is_allowed(): bool {

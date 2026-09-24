@@ -16,9 +16,11 @@ several small admin/editor features and plugin integrations behind one
 settings screen instead of shipping them as separate mu-plugins per client.
 
 **Upstream rule:** the starter is the source of truth for shared process - CI,
-release/deploy, WordPress.org compliance rules, `.distignore`, build scripts. If
-you improve one of those here, make the same change in the starter too (or tell
-the maintainer). Plugin-specific code and listing art stay here.
+release/deploy, WordPress.org compliance rules, `.distignore`, build scripts, and
+the "Releasing" and "Compliance" sections of this file. If you improve or fix one of
+those while working here, make the same change in the starter too (or tell the
+maintainer), so the next plugin inherits it. Plugin-specific code and listing art
+stay here.
 
 ## Documentation rules
 
@@ -53,6 +55,7 @@ assets/css, assets/js       Admin-only CSS/JS (plugin-specific; layout comes fro
 vendor/perxel-ui/           Shared admin-UI kit - vendored, see below
 languages/                  .pot template
 readme.txt                  WordPress.org listing (keep in sync with README.md + version)
+README.md                   Public-facing GitHub page only (see "Documentation rules")
 .wordpress-org/             Listing assets (icon, banner, screenshots) - not shipped
 .github/workflows/          lint.yml (PHPCS + Plugin Check), release.yml
 bin/                        build-zip.sh, update-ui.sh - identical in every plugin
@@ -85,16 +88,25 @@ class extending `Modules\Module`, listed in `Modules\Registry::MODULES`.
 
 - **Feature module** (`group()` returns `'feature'`) - self-contained, no
   third-party dependency, always available. E.g. `Editor_Restrictions`,
-  `Admin_Page_Guard`, `Featured_Image_Column`, `Featured_Posts`.
+  `Featured_Image_Column`, `Featured_Posts`, `Disable_Comments`, `Media_Sizes`.
 - **Integration module** (`group()` returns `'integration'`) - config for a
   specific third-party plugin or theme convention. Overrides `dependency()`
   with a `label`, a `check` callable, and either `wporg_slug` (renders a
   real one-click "Install Now" button on the settings screen) or
   `install_url` (a plain link - use this when the dependency isn't on
-  wordpress.org, e.g. Gravity Forms). `is_available()` calls `check()`; when
-  false the settings screen greys the row out and shows the install
-  action instead of letting the toggle be flipped. E.g. `Gravity_Forms`,
-  `Acf`, `Nectarblocks`.
+  wordpress.org, e.g. Gravity Forms). `is_available()` calls `check()`; an
+  unavailable integration is left off the settings screen entirely, and the
+  Recommended Plugins screen (`Recommended_Plugins`) lists every supported
+  plugin with its install action. E.g. `Gravity_Forms`, `Acf`, `Nectarblocks`.
+- **Security module** (`group()` returns `'security'`) - restricts or gates
+  wp-admin access, shown under "Access Control". E.g. `Admin_Page_Guard`.
+
+Every module defaults to **off** (`Settings::default_modules()`): a fresh
+install changes nothing until the site owner opts in. Keep it that way for new
+modules - this is a public plugin, and a module that changes site behaviour on
+activation is a support (and review) problem. Likewise never ship a default
+that names a specific user (Admin Page Guard's allow-list starts empty and the
+guard is inert while it is).
 
 **Adding a module:** add `includes/Modules/<Name>.php` extending
 `Modules\Module` (`slug()`, `label()`, `description()`, `group()`, `register()`;
@@ -102,12 +114,13 @@ an integration also overrides `dependency()`), then add the class to
 `Modules\Registry::MODULES`. The settings screen, availability detection and
 enable/disable persistence follow from that - no other wiring.
 
-Every module is currently toggle-only - no per-module settings UI yet.
-Where the ported mu-plugin had its own per-client config (allowed users,
-restricted pages, which post types), that config is exposed as a WordPress
-filter for now (documented in each class's docblock) rather than a second
-settings screen; add real fields to `includes/views/settings.php` when a
-module needs deeper configuration.
+A module can declare `settings_fields()` (types `toggle`, `roles`, `users`,
+`checkbox_group`, `list`); they render in a "Configure" disclosure on its
+settings row, or on a dedicated screen when `settings_page()` returns one
+(Admin Page Guard). Per-project overrides beyond those fields are WordPress
+filters, documented in each class's docblock. Form handlers read only the
+`modules` / `module_settings` keys from `$_POST` (`Admin::posted_settings()`),
+never the whole array.
 
 `Settings::sanitize()` skips reading a module's checkbox from `$_POST` when
 `is_available()` is false - a disabled `<input>` is never submitted by the
@@ -160,12 +173,19 @@ The template ships none. When you add them:
   name is the constant `PXTK_NAME` (no rebrand option).
 - **Text domain** `perxel-toolkit` (= the slug). JS i18n via `wp.i18n`
   (`wp_set_script_translations`); script deps include `wp-i18n`.
-- **Escape late, never suppress `EscapeOutput`.** Views echo kit markup through
-  `Admin::kit( \Perxel_UI::rows( ... ) )`, which is
-  `echo wp_kses( $html, \Perxel_UI::allowed_html() )`; every dynamic value
-  handed to the kit is still escaped inline. Other built HTML gets its own
-  `wp_kses()` with a narrow allowlist. No inline `on*` handlers in kit markup
-  (kses strips them) - wire them in JS.
+- **Escape at output, no blanket suppressions.** Never `phpcs:disable` a
+  `WordPress.Security.*` sniff (EscapeOutput, NonceVerification) for a file or
+  block - the WordPress.org review bot flags it as an escaping/nonce failure
+  even when every value is escaped. **Escape late**: kit markup is echoed
+  through `Admin::kit( \Perxel_UI::rows( ... ) )`, i.e.
+  `echo wp_kses( $html, \Perxel_UI::allowed_html() )`; any other built HTML gets
+  its own `wp_kses( $html, <narrow allowlist> )`. Never an `EscapeOutput`
+  suppression, not even per line - the 2026-09-23 review of perxel-ai-translate
+  rejected `echo $html; // phpcs:ignore ... escaped earlier`. No inline `on*`
+  handlers in kit markup (kses strips them) - wire them in JS. Read-only
+  `$_GET` flags get a per-line `NonceVerification.Recommended` ignore.
+  `composer run lint` runs `bin/check-suppressions.sh`, which fails on blanket
+  `WordPress.Security` disables and on any `EscapeOutput` suppression.
 - Admin screens render inside `Perxel_UI_Layout::open()/close()` via
   `Admin::screen()`, which falls back to a plain notice if the kit is not
   vendored. Use the kit components (`rows()`, `notice()`, `toggle()`, `code()`,
@@ -193,7 +213,9 @@ you run `bin/update-ui.sh`.
 
 We host the kit's component showcase as a hidden maintainer-only screen
 (`PERXEL_UI_SHOWCASE_HOSTED` + `Admin::can_see_showcase()`), so its own Tools
-page is suppressed.
+page is suppressed. It is opt-in per site with
+`define( 'PXTK_UI_SHOWCASE', true );` in `wp-config.php` - no hard-coded user
+check - and the release zip strips `showcase/` anyway.
 
 ## Before committing
 
@@ -222,10 +244,10 @@ Rules that are not obvious and cost real time when re-derived per plugin:
 | Custom-table names via `%i`, never string-concatenated | `WordPress.DB.PreparedSQL.NotPrepared` is **error-level** and blocks .org (see "Custom tables") |
 | No `load_plugin_textdomain()` | .org auto-loads translations (slug == text domain); calling it on `plugins_loaded` is "too early" on WP 6.7+ |
 | Prefix any variable you **assign** in a view (`$pxtk_url`); vars passed in via `extract()` are fine | `NonPrefixedVariableFound` fires on template-scope assignments |
+| No `phpcs:disable WordPress.Security.*` anywhere in `includes/` or the main file, and no `EscapeOutput` suppression at all: escape late via `Admin::kit()` (`wp_kses` + `Perxel_UI::allowed_html()`) or `wp_kses()` with a narrow allowlist | Reviewers flag file-wide security disables (perxel-image-optimizer, perxel-ai-translate 2026-09-22) and per-line "escaped earlier" echoes (perxel-ai-translate 2026-09-23); `bin/check-suppressions.sh` enforces both |
 | `set_time_limit()` etc.: `function_exists()` guard + inline `// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- <reason>` | discouraged-function warning |
 | Calling another plugin's hooks (WPML `wpml_*`, WooCommerce): scope a `phpcs.xml.dist` exclude to the wrapper file **and** add the code to `lint.yml` -> `ignore-codes` | `NonPrefixedHooknameFound`; the two tools don't share config |
-| Escape late: kit markup through `Admin::kit()` (`wp_kses` + `Perxel_UI::allowed_html()`), never a file-wide `phpcs:disable` nor a per-line `phpcs:ignore` on an `EscapeOutput` echo | WordPress.org review flagged both forms in perxel-ai-translate (2026-09-22, 2026-09-23); `bin/check-suppressions.sh` (run by `composer run lint`) fails on them |
-| No `'suppress_filters' => true` (Plugin Check **error**); `get_posts()` already defaults to it | error-level `WordPressVIPMinimum...SuppressFilters_suppress_filters` |
+| No `'suppress_filters' => true` (Plugin Check **error**); `get_posts()` already defaults to it; for WPML use `do_action( 'wpml_switch_language', 'all' )` and restore | error-level `WordPressVIPMinimum...SuppressFilters_suppress_filters` |
 | A MySQL `GET_LOCK` result must be checked; skip the guarded work when it isn't `1` | reviewer flagged an ignored lock result as a race condition |
 
 The split that bites: **Plugin Check runs its own ruleset, not `phpcs.xml.dist`.**
@@ -236,20 +258,36 @@ Any suppression for a documented false positive goes in *both* places -
 
 1. Bump the version in `perxel-toolkit.php` (header + `PXTK_VERSION`) and
    `readme.txt` (`Stable tag`); add a changelog entry to both `readme.txt` and
-   `CHANGELOG.md`. Tag, plugin `Version:` and `Stable tag` must all match or the
-   `deploy` job fails.
-2. Create a GitHub Release with that tag. `release.yml` attaches
-   `perxel-toolkit.zip` and, when the repo variable `DEPLOY_TO_WPORG` is `true`,
-   the `deploy` job runs the SHA-pinned 10up action: trunk + `tags/<version>` +
-   `.wordpress-org/` (banners, icons, screenshots) to SVN. It needs the org
-   secrets `SVN_USERNAME` / `SVN_PASSWORD` (shared with this repo).
-3. Until the first manual .org review is approved, leave `DEPLOY_TO_WPORG` unset:
-   a Release just builds the zip and stays green. After approval, set it and
-   test with Actions -> Release -> Run workflow (dry run is the default).
+   `CHANGELOG.md`. Merge to `main` first. Tag, plugin `Version:` and `Stable tag`
+   must all be equal or the deploy fails before touching SVN.
+2. Create the tag on `main` and publish a GitHub Release. `release.yml`'s `zip`
+   job attaches `perxel-toolkit.zip`; the `deploy` job commits trunk +
+   `tags/<version>` + `.wordpress-org/` (-> SVN `assets/`) with the SHA-pinned
+   10up action. It only runs when the repo variable `DEPLOY_TO_WPORG` is `true`.
+3. Verify `https://wordpress.org/plugins/<slug>/` and
+   `https://api.wordpress.org/plugins/info/1.0/<slug>.json` show the new version.
+   Assets can 404 on `ps.w.org` for a while after the first commit (CDN lag).
 
-The full process (first submission, org secrets, dry run, gotchas) is owned by
-the starter, https://github.com/perxel/wp-plugin-starter (`CLAUDE.md` ->
-"Releasing"). If you improve the shared process here, make the same change in
-the starter.
+### First release of a new plugin (the only manual bit is the review)
+
+1. Upload `dist/<slug>.zip` at <https://wordpress.org/plugins/developers/add/>.
+   No SVN repo exists until the review team approves it.
+2. Secrets `SVN_USERNAME` / `SVN_PASSWORD`: set once as **org** secrets and grant
+   this repo access (org -> Settings -> Secrets -> Repository access). Use an
+   SVN-specific password if the wordpress.org profile offers one. Never paste it
+   in chat or commit it.
+3. Once approved: set the repo variable `DEPLOY_TO_WPORG=true`, run **Actions ->
+   Release -> Run workflow** with the tag and `dry_run` on (default) to check the
+   staging without committing, then publish the Release. The very first version
+   deploys the same way as every later one - no manual SVN commit.
+4. If automation ever breaks, plain `svn` works: check out
+   `https://plugins.svn.wordpress.org/<slug>`, copy the `.distignore`-filtered
+   build into `trunk/`, `.wordpress-org/*` into `assets/`, `svn cp trunk
+   tags/<version>`, `svn ci`.
+
+Notes: a large first commit (hundreds of vendored files) sits on "Committing
+transaction..." for minutes - normal. The action strips the `v` from a `vX.Y.Z`
+tag itself; on a manual run it can't, hence the explicit `VERSION`. Do not bump
+versions, tag or publish releases without the maintainer asking.
 
 Build artifacts (`dist/`) are never committed.
